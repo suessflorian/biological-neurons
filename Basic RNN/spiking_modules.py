@@ -3,13 +3,31 @@ import torch.nn as nn
 import torch.distributions as distributions
 import torch.nn.functional as F
 
+class STEFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        return (input > 0).float()
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return F.hardtanh(grad_output)
+    
+class StraightThroughEstimator(nn.Module):
+    def __init__(self):
+        super(StraightThroughEstimator, self).__init__()
+
+    def forward(self, x):
+            x = STEFunction.apply(x)
+            return x
+
 class spikingNeuron(nn.Module):
     def __init__(self, in_features: int, out_features: int, device = None, dtype = None):
         factory_kwargs = {'device': device, 'dtype': dtype}
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.storage = torch.zeros(self.in_features)
+        self.ste = StraightThroughEstimator()
+        self.storage = torch.zeros(self.in_features).to(device)
         self.weights = nn.Parameter(torch.empty(self.in_features, self.out_features, **factory_kwargs))
         self.bias = nn.Parameter(torch.empty(self.out_features, **factory_kwargs))
 
@@ -17,33 +35,13 @@ class spikingNeuron(nn.Module):
         nn.init.normal_(self.bias, mean=0.0, std=1.0)
 
     def forward(self, x, t):
-        #input x is binary vector
         x = x + self.storage
-        self.storage = x
-        x = torch.matmul(self.storage/t, self.weights) + self.bias
+        self.storage = x.detach()
+        x = torch.matmul(x/(t+1), self.weights) + self.bias
         x = F.relu(x)
         x = torch.clip(x, 0, 1)
         x = torch.bernoulli(x)
+        x = self.ste(x)
 
         return x
-    
-x = torch.rand(40, 10)
-y = x**2
-t = 20
-
-model = spikingNeuron(10, 10)
-
-optim = torch.optim.SGD(model.parameters(), lr = 0.01)
-
-y_pred = model(x, 0%t + 1)
-loss = torch.sum((y_pred - y)**2)/1000
-print(loss)
-
-loss.backward()
-
-optim.step()
-optim.zero_grad()
-
-print(x)
-print(y_pred)
     
