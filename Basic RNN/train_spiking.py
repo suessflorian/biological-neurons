@@ -16,7 +16,6 @@ batch_size = 100
 learning_rate = 0.01
 
 input_size = 28*28 #per row
-sequence_length = 28
 t = 4
 
 # MNIST dataset 
