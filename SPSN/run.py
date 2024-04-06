@@ -93,3 +93,6 @@ print(x.shape)'''
 
 train_results = train(model, train_loader, nb_epochs=params['nb_epochs'], loss_mode=params['loss_mode'], 
                         reg_thr=params['reg_thr'], reg_thr_r=params['reg_thr_r'], lr=params['lr'], weight_decay=params['weight_decay'])
+
+print("\n-- Testing --\n")
+test_results = test(model, test_loader, loss_mode=params['loss_mode'])

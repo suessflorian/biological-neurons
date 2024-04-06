@@ -29,7 +29,7 @@ def create_network(params, device):
     modules.append(ParaLIF(input_size, hidden_size, device, spike_mode, recurrent=recurrent, tau_mem=tau_mem, tau_syn=tau_syn))
     for i in range(nb_layers-1):
         modules.append(ParaLIF(hidden_size, hidden_size, device, spike_mode, recurrent=recurrent, tau_mem=tau_mem, tau_syn=tau_syn))
-    modules.append(ParaLIF(hidden_size, nb_class, device, spike_mode, tau_mem=tau_mem, tau_syn=tau_syn, fire=False))
+    modules.append(ParaLIF(hidden_size, nb_class, device, spike_mode, tau_mem=tau_mem, tau_syn=tau_syn, fire=True))
 
     model = torch.nn.Sequential(*modules)
     return model
@@ -73,6 +73,9 @@ def train(model, data_loader, nb_epochs=100, loss_mode='mean', reg_thr=0., reg_t
         
             total += len(y)
             output = model(x)
+            '''print(output)
+            print(output.shape)
+            print(torch.unique(output))'''
             # Select the relevant function to process the output based on loss mode
             if loss_mode=='last' : output = output[:,-1,:]
             elif loss_mode=='max': output = torch.max(output,1)[0] 
@@ -100,6 +103,10 @@ def train(model, data_loader, nb_epochs=100, loss_mode='mean', reg_thr=0., reg_t
             _,y_pred = torch.max(output,1)
             local_acc += torch.sum((y==y_pred)).detach().cpu().numpy()
             progress_bar.set_postfix(loss=local_loss/total, accuracy=local_acc/total, _batch=f"{i_batch+1}/{nb_batch}")
+
+            #if (i_batch == 3):
+                #print(model.state_dict())
+                #raise Exception
         
         loss_hist.append(local_loss/total)
         acc_hist.append(local_acc/total)
@@ -123,6 +130,9 @@ def test(model, data_loader, loss_mode='mean'):
     start_time = time.time()
     # loop through the test data
     for x,y in progress_bar:
+        y = y.to(device = 'cuda')
+        x = x.to(device = 'cuda')
+        
         total += len(y)
         with torch.no_grad():
             output = model(x)
