@@ -5,7 +5,6 @@ import torch
 import torch.utils
 import torch.utils.data
 from snntorch import spikegen
-import gzip
 import numpy as np
 import struct
 from array import array
