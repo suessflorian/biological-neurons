@@ -22,15 +22,17 @@ from IPython.display import HTML
 
 import dataset
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-torch.cuda.empty_cache()
+device = torch.device('cuda' if torch.cuda.is_available(
+) else 'mps' if torch.backends.mps.is_available() else 'cpu')
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
 print(device)
 
 params = {
     'neuron': "ParaLIF-SB",
     "dir": "nmnist/",
     "dataset": "nmnist",
-    "window_size" : 1e-3,
+    "window_size": 1e-3,
     "batch_size": 256,
     "nb_epochs": 2,
     'recurrent': False,
@@ -46,27 +48,27 @@ params = {
     'weight_decay': 0.,
     'reg_thr': 0.,
     'reg_thr_r': 0.,
-    'shift': 0.05, 
+    'shift': 0.05,
     'scale': 0.15,
     'num_steps': 312
 }
 
-# MNIST dataset 
+# MNIST dataset
 train_dataset = dataset.MNISTCustomDataset(folder='data/MNIST/raw',
-                                           train=True,   
+                                           train=True,
                                            num_steps=params['num_steps'])
 
 test_dataset = dataset.MNISTCustomDataset(folder='data/MNIST/raw',
-                                           train=False,   
-                                           num_steps=params['num_steps'])
+                                          train=False,
+                                          num_steps=params['num_steps'])
 
 # Data loader
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset, 
-                                           batch_size=params['batch_size'], 
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
+                                           batch_size=params['batch_size'],
                                            shuffle=False)
 
-test_loader = torch.utils.data.DataLoader(dataset=test_dataset, 
-                                          batch_size=params['batch_size'], 
+test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
+                                          batch_size=params['batch_size'],
                                           shuffle=False)
 
 model = create_network(params, device)
@@ -91,8 +93,8 @@ plt.show()
 HTML(anim.to_html5_video())
 print(x.shape)'''
 
-train_results = train(model, train_loader, nb_epochs=params['nb_epochs'], loss_mode=params['loss_mode'], 
-                        reg_thr=params['reg_thr'], reg_thr_r=params['reg_thr_r'], lr=params['lr'], weight_decay=params['weight_decay'])
+train_results = train(model, train_loader, nb_epochs=params['nb_epochs'], loss_mode=params['loss_mode'],
+                      reg_thr=params['reg_thr'], reg_thr_r=params['reg_thr_r'], lr=params['lr'], weight_decay=params['weight_decay'])
 
 print("\n-- Testing --\n")
 test_results = test(model, test_loader, loss_mode=params['loss_mode'])
