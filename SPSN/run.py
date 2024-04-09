@@ -22,8 +22,7 @@ from IPython.display import HTML
 
 import dataset
 
-device = torch.device('cuda' if torch.cuda.is_available(
-) else 'mps' if torch.backends.mps.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
 print(device)

@@ -9,7 +9,9 @@ from snntorch import spikegen
 import matplotlib.pyplot as plt
 import snntorch.spikeplot as splt
 from IPython.display import HTML
-    
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+
     
 def create_network(params, device):
     """
@@ -61,8 +63,8 @@ def train(model, data_loader, nb_epochs=100, loss_mode='mean', reg_thr=0., reg_t
         nb_batch = len(data_loader)
         # Loop over the batches
         for i_batch,(x,y) in enumerate(data_loader):
-            y = y.to(device = 'cuda')
-            x = x.to(device = 'cuda')
+            y = y.to(device)
+            x = x.to(device)
 
             '''fig, ax = plt.subplots()
             anim = splt.animator(x[0], fig, ax)
@@ -130,8 +132,8 @@ def test(model, data_loader, loss_mode='mean'):
     start_time = time.time()
     # loop through the test data
     for x,y in progress_bar:
-        y = y.to(device = 'cuda')
-        x = x.to(device = 'cuda')
+        y = y.to(device = device)
+        x = x.to(device = device)
         
         total += len(y)
         with torch.no_grad():
