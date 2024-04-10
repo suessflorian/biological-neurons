@@ -53,13 +53,9 @@ params = {
 }
 
 # MNIST dataset
-train_dataset = dataset.MNISTCustomDataset(folder='data/MNIST/raw',
-                                           train=True,
-                                           num_steps=params['num_steps'])
+train_dataset = dataset.MNISTCustomDataset(num_steps=params['num_steps'], train=True)
 
-test_dataset = dataset.MNISTCustomDataset(folder='data/MNIST/raw',
-                                          train=False,
-                                          num_steps=params['num_steps'])
+test_dataset = dataset.MNISTCustomDataset(num_steps=params['num_steps'], train=False)
 
 # Data loader
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
