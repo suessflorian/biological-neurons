@@ -18,20 +18,20 @@ def create_network(params, device):
     This function creates a neural network based on the given parameters
     """
     neuron = params["neuron"]
-    nb_layers = params["nb_layers"]
     input_size = params["input_size"]
-    hidden_size = params["hidden_size"]
     nb_class = params["nb_class"]
     tau_mem = params["tau_mem"]
     tau_syn = params["tau_syn"]
     recurrent = params["recurrent"]
+    hidden_sizes = params['hidden_sizes']
 
     modules = []
     spike_mode = neuron.split('-')[-1]
-    modules.append(ParaLIF(input_size, hidden_size, device, spike_mode, recurrent=recurrent, tau_mem=tau_mem, tau_syn=tau_syn))
-    for i in range(nb_layers-1):
-        modules.append(ParaLIF(hidden_size, hidden_size, device, spike_mode, recurrent=recurrent, tau_mem=tau_mem, tau_syn=tau_syn))
-    modules.append(ParaLIF(hidden_size, nb_class, device, spike_mode, tau_mem=tau_mem, tau_syn=tau_syn, fire=True))
+    sizes = (input_size,) + hidden_sizes
+    
+    for size_in, size_out in zip(sizes[:-1], sizes[1:]):
+        modules.append(ParaLIF(size_in, size_out, device, spike_mode, recurrent=recurrent, tau_mem=tau_mem, tau_syn=tau_syn))    
+    modules.append(ParaLIF(sizes[-1], nb_class, device, spike_mode, tau_mem=tau_mem, tau_syn=tau_syn, fire=True))
 
     model = torch.nn.Sequential(*modules)
     return model
