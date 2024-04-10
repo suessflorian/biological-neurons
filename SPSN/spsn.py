@@ -2,7 +2,7 @@ import torch
 from base import Base, SurrGradSpike
 import torch.nn.functional as F
 
-
+#ParaLIF implementation from https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron/blob/main/neurons/paralif.py
 class ParaLIF(Base):
     """
     Class for implementing a Parallelizable Leaky Integrate-and-Fire (ParaLIF) neuron model
@@ -95,6 +95,7 @@ class ParaLIF(Base):
     
     # Sequential ParaLIF forward function
     def forward_sequential(self, X):
+
         batch_size, nb_steps,_ = X.shape
         syn_cur_hidden = torch.zeros_like(X[:,0]) # shape: [batch_size, hidden_size]
         mem_pot_hidden = torch.zeros_like(X[:,0]) # shape: [batch_size, hidden_size]

@@ -37,7 +37,7 @@ def create_network(params, device):
     return model
 
 
-def train(model, data_loader, nb_epochs=100, loss_mode='mean', reg_thr=0., reg_thr_r=0., optimizer=None, lr=1e-3, weight_decay=0.):
+def train(model, data_loader, device, nb_epochs=100, loss_mode='mean', reg_thr=0., reg_thr_r=0., optimizer=None, lr=1e-3, weight_decay=0.):
     """
     This function Train the given model on the train data.
     """
@@ -119,7 +119,7 @@ def train(model, data_loader, nb_epochs=100, loss_mode='mean', reg_thr=0., reg_t
 
 
 
-def test(model, data_loader, loss_mode='mean'):
+def test(model, data_loader, device, loss_mode='mean'):
     """
     This function Computes classification accuracy for the given model on the test data.
     """
@@ -130,6 +130,7 @@ def test(model, data_loader, loss_mode='mean'):
     spk_per_layer_r = []
     progress_bar = tqdm(data_loader, desc="Test")
     start_time = time.time()
+    acc_over_time = []
     # loop through the test data
     for x,y in progress_bar:
         y = y.to(device = device)
@@ -150,27 +151,52 @@ def test(model, data_loader, loss_mode='mean'):
             spk_per_layer.append([layer.nb_spike_per_neuron.sum().cpu().item() for layer in model if (layer.__class__.__name__ in ['LIF', 'ParaLIF'] and layer.fire)])
             spk_per_layer_r.append([layer.nb_spike_per_neuron_rec.sum().cpu().item() for layer in model if (layer.__class__.__name__ in ['ParaLIF'] and layer.fire)])
             progress_bar.set_postfix(accuracy=acc/total)
+            acc_over_time.append(acc/total)
+
     test_duration = (time.time()-start_time)
     
-    return {'acc':acc/total, 'spk':[np.mean(spk_per_layer,axis=0).tolist(), np.mean(spk_per_layer_r,axis=0).tolist()], 'dur':test_duration}
+    return {'acc':acc/total, 'spk':[np.mean(spk_per_layer,axis=0).tolist(), np.mean(spk_per_layer_r,axis=0).tolist()], 'dur':test_duration, 'acc_list': acc_over_time}
 
+def testSingleBatch(model, batch, device, loss_mode='mean'):
+    """
+    This function Computes classification accuracy for the given model on a single batch.
+    """
+    model.eval()
+    acc = 0
+    spk_per_layer = 0
+    spk_per_layer_r = 0
+    x, y = batch
+    # loop through the test data
+    y = y.to(device = device)
+    x = x.to(device = device)
+    with torch.no_grad():
+        output = model(x)
+        # Select the relevant function to process the output based on loss mode
+        if loss_mode=='last' : output = output[:,-1,:]
+        elif loss_mode=='max': output = torch.max(output,1)[0] 
+        elif loss_mode=='cumsum': output = F.softmax(output,dim=2).sum(1)
+        else: output = torch.mean(output,1)
+        # get the predicted label
+        _,y_pred = torch.max(output,1)
+        acc += torch.sum((y==y_pred)).cpu().numpy()
+        # get the number of spikes per layer for LIF and ParaLIF layers
+        spk_per_layer = [layer.nb_spike_per_neuron.sum().cpu().item() for layer in model if (layer.__class__.__name__ in ['LIF', 'ParaLIF'] and layer.fire)]
+        spk_per_layer_r = [layer.nb_spike_per_neuron_rec.sum().cpu().item() for layer in model if (layer.__class__.__name__ in ['ParaLIF'] and layer.fire)]
+    
+    return {'acc':acc/len(y), 'spk':[np.mean(spk_per_layer,axis=0).tolist(), np.mean(spk_per_layer_r,axis=0).tolist()]}
 
-
-
-
-
-def train_test(model, data_loader_train, data_loader_test, nb_epochs, loss_mode, reg_thr, reg_thr_r, lr=1e-3, weight_decay=0.):
+def train_test(model, data_loader_train, data_loader_test, device, nb_epochs, loss_mode, reg_thr, reg_thr_r, lr=1e-3, weight_decay=0.):
     loss_all, train_acc_all, train_dur_all = [],[],[]
     test_acc_all, test_spk_all, test_dur_all = [],[],[]  
     
     optimizer = torch.optim.Adamax(model.parameters(), lr=lr, weight_decay=weight_decay)
     for i in range(nb_epochs):
-        print(f'\nEpoch: {i}/{nb_epochs}')
-        res_train = train(model, data_loader_train, nb_epochs=1, loss_mode=loss_mode, reg_thr=reg_thr, reg_thr_r=reg_thr_r, optimizer=optimizer)
+        print(f'\nEpoch: {i+1}/{nb_epochs}')
+        res_train = train(model, data_loader_train, device, nb_epochs=1, loss_mode=loss_mode, reg_thr=reg_thr, reg_thr_r=reg_thr_r, optimizer=optimizer)
         loss_all += res_train['loss']
         train_acc_all += res_train['acc']
         train_dur_all.append(res_train['dur'])
-        res_test = test(model, data_loader_test, loss_mode=loss_mode)
+        res_test = test(model, data_loader_test, device, loss_mode=loss_mode)
         test_acc_all.append(res_test['acc'])
         test_spk_all.append(res_test['spk'])
         test_dur_all.append(res_test['dur'])
