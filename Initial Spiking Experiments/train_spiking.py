@@ -6,13 +6,13 @@ import torchvision
 import torchvision.transforms as transforms
 from torch import autograd
 
-from spiking_modules import spikingNeuron
+from spiking_modules import spikingNeuron, HeavySide
 
 device = torch.device('cuda' if torch.cuda.is_available(
 ) else 'mps' if torch.backends.mps.is_available() else 'cpu')
 
 num_classes = 10
-num_epochs = 50
+num_epochs = 10
 batch_size = 100
 learning_rate = 0.01
 
@@ -78,6 +78,7 @@ for epoch in range(num_epochs):
         # Forward pass
         outputs = model(images, t)
         loss = criterion(outputs, labels)
+        
 
         # Backward and optimize
         optim.zero_grad()

@@ -1,8 +1,7 @@
 import torch
 import numpy as np
 
-
-
+# Base class implementation from https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron/blob/main/neurons/base.py
 class Base(torch.nn.Module):
     """
     Base class for creating a spiking neural network using PyTorch.
@@ -48,8 +47,6 @@ class Base(torch.nn.Module):
             torch.nn.init.kaiming_uniform_(self.fc_recu.weight, a=0, mode='fan_in', nonlinearity='linear')
             torch.nn.init.zeros_(self.fc_recu.bias)
             if self.debug: torch.nn.init.ones_(self.fc_recu.weight)
-
-
 
 
 # Surrogate gradient implementation from https://github.com/fzenke/spytorch/blob/main/notebooks/SpyTorchTutorial1.ipynb

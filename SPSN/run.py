@@ -89,8 +89,16 @@ plt.show()
 HTML(anim.to_html5_video())
 print(x.shape)'''
 
-train_results = train(model, train_loader, nb_epochs=params['nb_epochs'], loss_mode=params['loss_mode'],
+train_results = train(model, train_loader, device = device, nb_epochs=params['nb_epochs'], loss_mode=params['loss_mode'],
                       reg_thr=params['reg_thr'], reg_thr_r=params['reg_thr_r'], lr=params['lr'], weight_decay=params['weight_decay'])
 
 print("\n-- Testing --\n")
-test_results = test(model, test_loader, loss_mode=params['loss_mode'])
+test_results1 = test(model, test_loader, device= device, loss_mode=params['loss_mode'])['acc_list']
+test_results2 = test(model, test_loader, device= device, loss_mode=params['loss_mode'])['acc_list']
+test_results3 = test(model, test_loader, device= device, loss_mode=params['loss_mode'])['acc_list']
+
+plt.plot(list(range(len(test_results1))), test_results1, label='test_results1')
+plt.plot(list(range(len(test_results2))), test_results2, label='test_results2')
+plt.plot(list(range(len(test_results3))), test_results3, label='test_results3')
+plt.legend() 
+plt.show()
