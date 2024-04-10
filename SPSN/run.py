@@ -22,45 +22,41 @@ from IPython.display import HTML
 
 import dataset
 
-device = torch.device('cuda' if torch.cuda.is_available(
-) else 'mps' if torch.backends.mps.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
 print(device)
 
 params = {
-    'neuron': "ParaLIF-SB",
-    "dir": "nmnist/",
-    "dataset": "nmnist",
-    "window_size": 1e-3,
-    "batch_size": 256,
-    "nb_epochs": 2,
-    'recurrent': False,
-    'nb_layers': 2,
-    'hidden_size': 128,
-    'data_augmentation': False,
-    'input_size': 28*28,
+    # Data
+    "dataset": "mnist",
+    'input_size': 28*28, # Remember to change the input size if changing the dataset
     'nb_class': 10,
-    'loss_mode': 'mean',
-    'tau_mem': 2e-2,
-    'tau_syn': 2e-2,
+    "batch_size": 256,
+    
+    # Model
+    'num_steps': 312,
+    "hidden_sizes": (128, 32),
     'lr': 0.001,
     'weight_decay': 0.,
+    "nb_epochs": 2,
+    'loss_mode': 'mean',
+    
+    # Neuron
+    'neuron': "ParaLIF-SB",
+    'recurrent': False,
+    'tau_mem': 2e-2,
+    'tau_syn': 2e-2,
+    
+    # Regularisation
     'reg_thr': 0.,
-    'reg_thr_r': 0.,
-    'shift': 0.05,
-    'scale': 0.15,
-    'num_steps': 312
+    'reg_thr_r': 0.
 }
 
 # MNIST dataset
-train_dataset = dataset.MNISTCustomDataset(folder='data/MNIST/raw',
-                                           train=True,
-                                           num_steps=params['num_steps'])
+train_dataset = dataset.CustomDataset(num_steps=params['num_steps'], dataset=params['dataset'], train=True)
 
-test_dataset = dataset.MNISTCustomDataset(folder='data/MNIST/raw',
-                                          train=False,
-                                          num_steps=params['num_steps'])
+test_dataset = dataset.CustomDataset(num_steps=params['num_steps'], dataset=params['dataset'], train=False)
 
 # Data loader
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
