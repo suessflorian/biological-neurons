@@ -2,13 +2,18 @@ import torch
 import torchvision
 from snntorch import spikegen
 
-class MNISTCustomDataset(torch.utils.data.Dataset):
-    def __init__(self, folder='data', num_steps=1, train=True, transform=None):
+class CustomDataset(torch.utils.data.Dataset):
+    def __init__(self, folder='data', dataset='mnist', num_steps=1, train=True, transform=None):
+        self.folder = folder
+        self.train = train      
         self.num_steps = num_steps
-        transform = transform or torchvision.transforms.Compose([
+        self.transform = transform or torchvision.transforms.Compose([
             torchvision.transforms.ToTensor()
         ])
-        self.dataset = torchvision.datasets.MNIST(folder, train=train, transform=transform)
+        if dataset == 'mnist':
+            self.dataset = torchvision.datasets.MNIST(self.folder, train=self.train, transform=self.transform)
+        elif dataset == 'cifar':
+            self.dataset = torchvision.datasets.CIFAR10(self.folder, train=self.train, transform=self.transform)
     
     def __getitem__(self, idx):
         x, label = self.dataset[idx]

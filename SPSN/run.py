@@ -38,7 +38,7 @@ params = {
     'nb_layers': 2,
     'hidden_size': 128,
     'data_augmentation': False,
-    'input_size': 28*28,
+    'input_size': 3*32*32, # Remember to change the input size if changing the dataset
     'nb_class': 10,
     'loss_mode': 'mean',
     'tau_mem': 2e-2,
@@ -53,9 +53,9 @@ params = {
 }
 
 # MNIST dataset
-train_dataset = dataset.MNISTCustomDataset(num_steps=params['num_steps'], train=True)
+train_dataset = dataset.CustomDataset(num_steps=params['num_steps'], train=True, dataset='cifar')
 
-test_dataset = dataset.MNISTCustomDataset(num_steps=params['num_steps'], train=False)
+test_dataset = dataset.CustomDataset(num_steps=params['num_steps'], train=False, dataset='cifar')
 
 # Data loader
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
