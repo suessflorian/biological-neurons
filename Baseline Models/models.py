@@ -1,9 +1,5 @@
-import torch
-import torchvision
 import torch.nn.functional as F
 import torch.nn as nn
-
-from utils import printf
 
 class LeNet5(nn.Module):
     # CIFAR-10
