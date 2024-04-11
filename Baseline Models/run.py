@@ -6,8 +6,8 @@ from scripts import train_model, test_model
 ##### Options #####
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
-load_name = 'CIFAR-10-LeNet5-150-epochs' # set to None if loading not required
-save_name = 'CIFAR-10-LeNet5-200-epochs' # set to None if saving not required
+load_name = 'CIFAR-10-LeNet5-30-epochs' # set to None if loading not required
+save_name = 'CIFAR-10-LeNet5-40-epochs' # set to None if saving not required
 train = True
 
 
@@ -15,7 +15,7 @@ train = True
 
 batch_size = 256
 learning_rate = 0.01
-n_epochs = 50
+n_epochs = 10
 
 
 ##### Data #####
@@ -46,6 +46,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 ##### Training #####
 
 if train:
+    print('\n---------- Training ----------\n')
     model, results = train_model(model, 
                                 loader=train_loader, 
                                 optimizer=optimizer, 
@@ -54,11 +55,12 @@ if train:
 
 
 ##### Evaluation #####
+print('\n---------- Testing ----------\n')
 
 train_accuracy = test_model(model, loader=train_loader, device=device)
 test_accuracy = test_model(model, loader=test_loader, device=device)
 print(f'Train Accuracy: {train_accuracy * 100:.4f}%\n' + 
-      f'Test Accuracy: {test_accuracy * 100:.4f}%')
+      f'Test Accuracy: {test_accuracy * 100:.4f}%\n')
 
 
 ##### Saving #####
