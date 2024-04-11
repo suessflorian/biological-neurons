@@ -2,7 +2,6 @@ import torch
 from utils import printf
 
 def train_model(model, loader, optimizer, n_epochs, device):
-    print('\n---------- Training ----------\n')
     criterion = torch.nn.CrossEntropyLoss()
 
     train_loss, train_acc, test_acc = [], [], []
@@ -45,7 +44,6 @@ def train_model(model, loader, optimizer, n_epochs, device):
     return model, results
 
 def test_model(model, loader, device):
-    print('\n---------- Testing ----------\n')
     with torch.no_grad():
         model.eval()
         n_correct, n_total = 0, 0
