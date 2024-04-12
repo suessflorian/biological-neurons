@@ -1,3 +1,7 @@
+# WARNING: copied directly from https://github.com/jeshraghian/snntorch/blob/bdc1b4968a53b70f5b5a716e2f9da2a4af47495a/snntorch/spikegen.py#L1
+# Important to regularly check in on this repository if actively relying on it to pull in the latest of their work.
+# TODO: relatively simple to produce a spike train though, can just implement our own altogether.
+
 import torch
 from bernoulli import sample
 
