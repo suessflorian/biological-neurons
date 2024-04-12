@@ -13,14 +13,14 @@ train = True # Set to False if model training is not required
 
 model = LeNet5_MNIST().to(device)
 
-load_name = None #'FASHION-LeNet5-20-epochs' # set to None if loading not required
-save_name = None #'FASHION-LeNet5-50-epochs' # set to None if saving not required
+load_name = 'FASHION-LeNet5-20-epochs' # set to None if loading not required
+save_name = 'FASHION-LeNet5-50-epochs' # set to None if saving not required
 
 ##### Hyperparameters #####
 
 batch_size = 256
 learning_rate = 0.01
-n_epochs = 1
+n_epochs = 30
 
 
 ##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####
