@@ -1,39 +1,44 @@
 import torch
 import torchvision
-from models import LeNet5
+from models import LeNet5_CIFAR, LeNet5_MNIST
 from scripts import train_model, test_model
+from utils import load_data
+
+device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
 
 ##### Options #####
 
-device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
-load_name = 'CIFAR-10-LeNet5-30-epochs' # set to None if loading not required
-save_name = 'CIFAR-10-LeNet5-40-epochs' # set to None if saving not required
-train = True
+dataset = 'fashion'
+train = True # Set to False if model training is not required
 
+model = LeNet5_MNIST().to(device)
+
+load_name = 'FASHION-LeNet5-20-epochs' # set to None if loading not required
+save_name = 'FASHION-LeNet5-50-epochs' # set to None if saving not required
 
 ##### Hyperparameters #####
 
 batch_size = 256
 learning_rate = 0.01
-n_epochs = 10
+n_epochs = 30
+
+
+##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####
+
 
 
 ##### Data #####
 
 transforms = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor(),
-    torchvision.transforms.Normalize((0,0,0), (1,1,1))
+    torchvision.transforms.Normalize((0,0,0), (1,1,1)) if dataset == 'cifar' else torchvision.transforms.Normalize(0, 1)
 ])
 
-train_dataset = torchvision.datasets.CIFAR10('data', train = True, transform=transforms)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-test_dataset = torchvision.datasets.CIFAR10('data', train = False, transform=transforms)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+train_dataset, train_loader = load_data(dataset=dataset, path='data', train=True, batch_size=batch_size, transforms=transforms)
+test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False, batch_size=batch_size, transforms=transforms)
 
 
 ##### Model #####
-
-model = LeNet5().to(device)
 
 if load_name:
     try:
@@ -59,8 +64,8 @@ print('\n---------- Testing ----------\n')
 
 train_accuracy = test_model(model, loader=train_loader, device=device)
 test_accuracy = test_model(model, loader=test_loader, device=device)
-print(f'Train Accuracy: {train_accuracy * 100:.4f}%\n' + 
-      f'Test Accuracy: {test_accuracy * 100:.4f}%\n')
+print(f'Train Accuracy: {train_accuracy * 100:.2f}%\n' + 
+      f'Test Accuracy: {test_accuracy * 100:.2f}%\n')
 
 
 ##### Saving #####

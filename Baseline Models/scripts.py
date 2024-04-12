@@ -1,4 +1,5 @@
 import torch
+import torchvision
 from utils import printf
 
 def train_model(model, loader, optimizer, n_epochs, device):
