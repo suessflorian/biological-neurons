@@ -9,22 +9,22 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 
 ##### Options #####
 
-dataset = 'fashion'
+dataset = 'mnist'
 train = True # Set to False if model training is not required
 
-model = SimpleSNN(28*28).to(device) # MNIST
-# model = SimpleSNN(3*32*32).to(device) # CIFAR-10
-#model = LeNet5_CIFAR().to(device)
-# model = LeNet5_MNIST().to(device)
+model = SimpleSNN(28*28) # MNIST
+# model = SimpleSNN(3*32*32) # CIFAR-10
+#model = LeNet5_CIFAR()
+# model = LeNet5_MNIST()
 
-load_name = 'FASHION-SimpleSNN-10-epochs' # set to None if loading not required
-save_name = 'FASHION-SimpleSNN-20-epochs' # set to None if saving not required
+load_name = 'MNIST-SimpleSNN-5-epochs' # set to None if loading not required
+save_name = 'MNIST-SimpleSNN-10-epochs' # set to None if saving not required
 
 ##### Hyperparameters #####
 
 batch_size = 256
 learning_rate = 0.01
-n_epochs = 10
+n_epochs = 5
 optimizer = torch.optim.SGD
 # optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
 
@@ -51,9 +51,14 @@ test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False,
 
 ##### Model #####
 
+model = model.to(device)
+
 if load_name:
     try:
-        model.load_state_dict(torch.load('Baseline Models/models/' + load_name + '.pt'))
+        state_dict = torch.load('Baseline Models/models/' + load_name + '.pt')
+        if isinstance(model, SimpleSNN):
+            state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}  # Exclude memory states from loading
+        model.load_state_dict(state_dict, strict=False)
     except RuntimeError:
         raise RuntimeError('SNNTorch Models cannot loaded properly yet.')
     except:
@@ -86,4 +91,7 @@ print(f'Train Accuracy: {train_accuracy * 100:.2f}%\n' +
 ##### Saving #####
 
 if save_name:
-    torch.save(model.state_dict(), 'Baseline Models/models/' + save_name + '.pt')
+    state_dict = model.state_dict()
+    if isinstance(model, SimpleSNN):
+        state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}
+    torch.save(state_dict, 'Baseline Models/models/' + save_name + '.pt')
