@@ -53,10 +53,9 @@ test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False,
 
 if load_name:
     try:
-        # directory = 'Baseline Models/models/' + load_name + '.pt'
-        # import os
-        # print(os.listdir('Baseline Models/models'))
         model.load_state_dict(torch.load('Baseline Models/models/' + load_name + '.pt'))
+    except RuntimeError:
+        raise RuntimeError('SNNTorch Models cannot loaded properly yet.')
     except:
         print('Model Not Found. Using Untrained Model.')
 
