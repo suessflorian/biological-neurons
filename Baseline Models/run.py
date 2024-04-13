@@ -1,8 +1,9 @@
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN
 from scripts import train_model, test_model
 from utils import load_data
+import time
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -11,16 +12,26 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 dataset = 'fashion'
 train = True # Set to False if model training is not required
 
-model = LeNet5_MNIST().to(device)
+model = SimpleSNN(28*28).to(device) # MNIST
+# model = SimpleSNN(3*32*32).to(device) # CIFAR-10
+#model = LeNet5_CIFAR().to(device)
+# model = LeNet5_MNIST().to(device)
 
-load_name = 'FASHION-LeNet5-20-epochs' # set to None if loading not required
-save_name = 'FASHION-LeNet5-50-epochs' # set to None if saving not required
+load_name = 'FASHION-SimpleSNN-10-epochs' # set to None if loading not required
+save_name = 'FASHION-SimpleSNN-20-epochs' # set to None if saving not required
 
 ##### Hyperparameters #####
 
 batch_size = 256
 learning_rate = 0.01
-n_epochs = 30
+n_epochs = 10
+optimizer = torch.optim.SGD
+# optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
+
+
+
+
+
 
 
 ##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####
@@ -42,21 +53,26 @@ test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False,
 
 if load_name:
     try:
+        # directory = 'Baseline Models/models/' + load_name + '.pt'
+        # import os
+        # print(os.listdir('Baseline Models/models'))
         model.load_state_dict(torch.load('Baseline Models/models/' + load_name + '.pt'))
     except:
         print('Model Not Found. Using Untrained Model.')
 
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optimizer(model.parameters(), lr=learning_rate)
 
 ##### Training #####
 
 if train:
+    start_time = time.time()
     print('\n---------- Training ----------\n')
     model, results = train_model(model, 
                                 loader=train_loader, 
                                 optimizer=optimizer, 
                                 n_epochs=n_epochs, 
                                 device=device)
+    print(f'\nTraining time: {time.time() - start_time:.1f} seconds.')
 
 
 ##### Evaluation #####
