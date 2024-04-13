@@ -15,11 +15,11 @@ def load_data(dataset = "mnist",
               batch_size = 256, 
               transforms = torchvision.transforms.ToTensor()):
     if dataset.lower() == 'mnist':
-        dataset = torchvision.datasets.MNIST('data', train=train, transform=transforms)
+        dataset = torchvision.datasets.MNIST('data', train=train, transform=transforms, download=True)
     elif dataset.lower() == 'fashion':
-        dataset = torchvision.datasets.FashionMNIST('data', train=train, transform=transforms)
+        dataset = torchvision.datasets.FashionMNIST('data', train=train, transform=transforms, download=True)
     elif dataset.lower() == 'cifar':
-        dataset = torchvision.datasets.CIFAR10('data', train=train, transform=transforms)
+        dataset = torchvision.datasets.CIFAR10('data', train=train, transform=transforms, download=True)
     else:
         raise ValueError('Invalid dataset. Options: [mnist, cifar, fashion]')
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
