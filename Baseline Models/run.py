@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, testParaLIF
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN #,testParaLIF
 from scripts import train_model, test_model
 from utils import load_data
 import time
@@ -12,11 +12,11 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 ##### Hyperparameters #####
 
 batch_size = 256
-learning_rate = 0.001 # use 0.001 for ParaLIF
-n_epochs = 5
+learning_rate = 0.01 # use 0.001 for ParaLIF
+n_epochs = 40
 
-# optimizer = torch.optim.SGD # Best for SimpleSNN
-optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
+optimizer = torch.optim.SGD # Best for SimpleSNN
+# optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
 # optimizer = torch.optim.Adamax # Best for ParaLIF
 
 
@@ -32,22 +32,20 @@ spike_mode = 'SB'
 
 ##### Options #####
 
-dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
+dataset = 'cifar' # ['mnist', 'cifar', 'fashion']
 train = True # Set to False if model training is not required
-plot = False
+plot = True
 
-# model = SimpleSNN(28*28, num_steps=30) # MNIST or FashionMNIST
-# model = SimpleSNN(3*32*32, num_steps=10) # CIFAR-10
+# model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
+model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
-load_name = 'FASHION-SimpleParaLIF-5-epochs' # set to None if loading not required
-save_name = 'FASHION-SimpleParaLIF-10-epochs' # set to None if saving not required
-# load_name = 'MNIST-SimpleParaLIF-10-epochs'
+load_name = 'CIFAR-10-LargerSNN-10-epochs' # set to None if loading not required
+save_name = 'CIFAR-10-LargerSNN-50-epochs' # set to None if saving not required
 
-# Time taken to train 5 epochs on testParaLIF: 88.7, 
 
 ##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####
 
@@ -71,7 +69,7 @@ model = model.to(device)
 if load_name:
     try:
         state_dict = torch.load('Baseline Models/models/' + load_name + '.pt')
-        if isinstance(model, SimpleSNN):
+        if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN):
             state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}  # Exclude memory states from loading
             model.load_state_dict(state_dict, strict=False)
         else:
@@ -113,6 +111,6 @@ print(f'Train Accuracy: {train_accuracy * 100:.2f}%\n' +
 
 if save_name and train and input('SAVE??: ') == 'y':
     state_dict = model.state_dict()
-    if isinstance(model, SimpleSNN):
+    if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN):
         state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}
     torch.save(state_dict, 'Baseline Models/models/' + save_name + '.pt')
