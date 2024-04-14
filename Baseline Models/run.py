@@ -13,7 +13,7 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 
 batch_size = 256
 learning_rate = 0.01 # use 0.001 for ParaLIF
-n_epochs = 40
+n_epochs = 50
 
 optimizer = torch.optim.SGD # Best for SimpleSNN
 # optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
@@ -43,8 +43,8 @@ model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
-load_name = 'CIFAR-10-LargerSNN-10-epochs' # set to None if loading not required
-save_name = 'CIFAR-10-LargerSNN-50-epochs' # set to None if saving not required
+load_name = 'CIFAR-10-LargerSNN-50-epochs' # set to None if loading not required
+save_name = 'CIFAR-10-LargerSNN-100-epochs' # set to None if saving not required
 
 
 ##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####

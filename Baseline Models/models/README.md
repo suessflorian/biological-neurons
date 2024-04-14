@@ -15,8 +15,10 @@ CIFAR-10-SimpleSNN-5-epochs.pt <- (22.58% test) [lr=0.01, optim=sgd, num_steps=5
 CIFAR-10-SimpleSNN-10-epochs.pt <- (27.84% test) [lr=0.01, optim=sgd, num_steps=50, decay_rate=0]
 CIFAR-10-SimpleSNN-50-epochs.pt <- (29.37% test) [lr=0.01, optim=sgd, num_steps=50, decay_rate=0]
 
+************ LIF Experiments ************
 CIFAR-10-LargerSNN-5-epochs.pt <- (31.05% test) [lr=0.01, optim=sgd, num_steps=20]
 CIFAR-10-LargerSNN-10-epochs.pt <- (38.12% test) [lr=0.01, optim=sgd, num_steps=20]
+CIFAR-10-LargerSNN-50-epochs.pt <- (44.02% test) [lr=0.01, optim=sgd, num_steps=20]
 
 
 
