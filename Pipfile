@@ -22,6 +22,7 @@ h5py = "*"
 librosa = "*"
 tonic = "*"
 scikit-learn = "*"
+scikit-image = "*"
 
 [dev-packages]
 jupyter = "*"
