@@ -135,7 +135,6 @@ class SimpleParaLif(nn.Module):
         x = self.paralif2(x)
         x = self.paralif3(x)
         x = self.paralif4(x)
-
         x = torch.mean(x,1)
-        return x
+        return x.softmax(dim=1)
     
