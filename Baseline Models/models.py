@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import snntorch as snn
+from SPSN import spsn, base
 from utils import rate
 
 class LeNet5_CIFAR(nn.Module):
@@ -106,3 +107,35 @@ class SimpleSNN(nn.Module):
             x = self.fc4(x)
             output_spikes.append(x)
         return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
+    
+class ParaLif(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, spike_mode, recurrent=False, num_steps= 10, 
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super(ParaLif, self).__init__()
+        
+        self.num_steps = num_steps
+
+        # Set the spiking function
+        self.paralif1 = spsn.ParaLIF(input_size, 2**9, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif2 = spsn.ParaLIF(2**9, 2**8, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif3 = spsn.ParaLIF(2**8, 2**7, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif4 = spsn.ParaLIF(2**7, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+    
+    def forward(self, images):
+        flattened = images.view(images.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        spike_train = torch.swapaxes(spike_train, 0, 1)
+
+        x = self.paralif1(spike_train)
+        x = self.paralif2(x)
+        x = self.paralif3(x)
+        x = self.paralif4(x)
+
+        x = torch.mean(x,1)
+        return x
+    
