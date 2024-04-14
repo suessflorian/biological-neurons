@@ -1,35 +1,46 @@
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif
 from scripts import train_model, test_model
 from utils import load_data
 import time
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
 
-##### Options #####
-
-dataset = 'mnist'
-train = True # Set to False if model training is not required
-
-model = SimpleSNN(28*28) # MNIST
-# model = SimpleSNN(3*32*32) # CIFAR-10
-#model = LeNet5_CIFAR()
-# model = LeNet5_MNIST()
-
-load_name = 'MNIST-SimpleSNN-5-epochs' # set to None if loading not required
-save_name = 'MNIST-SimpleSNN-10-epochs' # set to None if saving not required
-
 ##### Hyperparameters #####
 
 batch_size = 256
 learning_rate = 0.01
-n_epochs = 5
-optimizer = torch.optim.SGD
+n_epochs = 10
+
+# optimizer = torch.optim.SGD
 # optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
+optimizer = torch.optim.Adamax # Best for ParaLIF
 
 
 
+### LIF/ParaLIF Hyperparameters ###
+
+num_steps = 10
+tau_mem = 2e-2
+tau_syn = 2e-2
+decay_rate = 0.9
+spike_mode = 'SB'
+
+
+##### Options #####
+
+dataset = 'mnist' # ['mnist', 'cifar', 'fashion']
+train = True # Set to False if model training is not required
+
+# model = SimpleSNN(28*28, decay_rate=decay_rate, num_steps=num_steps) # MNIST
+# model = SimpleSNN(3*32*32, decay_rate=decay_rate, num_steps=num_steps) # CIFAR-10
+# model = LeNet5_CIFAR()
+# model = LeNet5_MNIST()
+model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode)
+
+load_name = None #'MNIST-SimpleSNN-5-epochs' # set to None if loading not required
+save_name = None #'MNIST-SimpleSNN-10-epochs' # set to None if saving not required
 
 
 
