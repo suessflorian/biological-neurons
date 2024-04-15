@@ -6,6 +6,8 @@ from models import SimpleParaLif, SimpleSNN, LeNet5_MNIST, LargerSNN
 from attacks import foolbox_attack
 import foolbox as fb
 
+### GPU doesn't work for me properly - might be an easy fix though.
+
 # device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
 
@@ -29,9 +31,12 @@ spike_mode = 'SB'
 
 use_train_data = True
 n_batches_to_run = 2
-attack = fb.attacks.LinfDeepFoolAttack()
 epsilons = 0.01
 plot = True
+
+### Attacks ###
+
+attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
 
 ### Model Loading ###
 
@@ -39,7 +44,7 @@ plot = True
 # model_name = 'SimpleParaLIF'
 # n_epochs = 5
 
-dataset = 'mnist'
+dataset = 'fashion'
 model_name = 'SimpleParaLIF'
 n_epochs = 5
 
@@ -135,6 +140,9 @@ for i, (images, labels) in enumerate(loader):
     
     if batch_count == n_batches_to_run:
         break
+
+if len(raw_attacks) == 0:
+    raise ValueError('No Attacks Found.')
 
 raw_attacks = torch.cat(raw_attacks, dim=0)
 perturbed_images = torch.cat(perturbed_images, dim=0)
