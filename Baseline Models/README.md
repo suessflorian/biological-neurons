@@ -25,3 +25,6 @@ CIFAR-10-LargerSNN-50-epochs.pt <- (44.02% test) [lr=0.01, optim=sgd, num_steps=
 ************ ParaLIF Models ************ (These are the ones in main - see Matt's branch for the ones whose results are in canva)
 MNIST-SimpleParaLIF-5-epochs.pt <- (97.13% test) [lr=0.001, optim=adam, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
 FASHION-SimpleParaLIF-5-epochs.pt <- (85.44% test) [lr=0.001, optim=adam, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
+
+
+

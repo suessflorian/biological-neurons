@@ -1,5 +1,7 @@
 import torch
 import torchvision
+import foolbox as fb
+import matplotlib.pyplot as plt
 
 def printf(string):
     # function for printing stuff that gets removed from the output each iteration
@@ -26,6 +28,26 @@ def load_data(dataset = "mnist",
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataset, loader
 
+def plot_attack(original_images, 
+                raw_attacks, 
+                perturbed_images, 
+                original_labels, 
+                original_predictions, 
+                adversarial_predictions, 
+                index, 
+                categories=None):
+
+    fig, axs = plt.subplots(1,3)
+    axs[0].imshow(original_images[index,0])
+    axs[1].imshow(raw_attacks[index,0])
+    axs[2].imshow(perturbed_images[index,0])
+    axs[0].set_title('Original Image')
+    axs[1].set_title('Raw Attack')
+    axs[2].set_title('Perturbed Image')
+    if categories is not None:
+        fig.suptitle(f'True: {categories[original_labels[index]]},\nPredicted: {categories[original_predictions[index]]},\nAdversarial: {categories[adversarial_predictions[index]]}')
+        plt.tight_layout(); fig.subplots_adjust(top=1.1)
+    plt.show()
 
 # WARNING: Implementation from: https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron
 # Sigmoid Bernoulli Spikes Generation
