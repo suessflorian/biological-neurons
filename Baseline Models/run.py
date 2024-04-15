@@ -32,19 +32,19 @@ spike_mode = 'SB'
 
 ##### Options #####
 
-dataset = 'cifar' # ['mnist', 'cifar', 'fashion']
-train = True # Set to False if model training is not required
+dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
+train = False # Set to False if model training is not required
 plot = True
 
-# model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
-model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
+model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
+# model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
-load_name = 'CIFAR-10-LargerSNN-50-epochs' # set to None if loading not required
-save_name = 'CIFAR-10-LargerSNN-100-epochs' # set to None if saving not required
+load_name = 'FASHION-SimpleSNN-5-epochs' # set to None if loading not required
+save_name = None #'CIFAR-10-LargerSNN-100-epochs' # set to None if saving not required
 
 
 ##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####
