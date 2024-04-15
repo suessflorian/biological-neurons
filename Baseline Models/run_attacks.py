@@ -2,7 +2,7 @@ import torch
 import torchvision
 from utils import load_data, plot_attack
 from scripts import test_model
-from models import SimpleParaLif, SimpleSNN, LeNet5_MNIST, LargerSNN
+from models import SimpleParaLif, SimpleSNN, LeNet5_MNIST, LargerSNN, LeNet5_CIFAR
 from attacks import foolbox_attack
 import foolbox as fb
 
@@ -45,23 +45,23 @@ attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/sta
 # model_name = 'SimpleParaLIF'
 # n_epochs = 5
 
-dataset = 'fashion'
-model_name = 'SimpleParaLIF'
-n_epochs = 5
+dataset = 'cifar'
+model_name = 'LeNet5'
+n_epochs = 50
 
 
 ############################## Model ##############################
 
 # model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
-# model = LeNet5_CIFAR()
+model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
 model = model.to(device)
 
-model_name = dataset.upper() + '-' + model_name + '-' + str(n_epochs) + '-epochs.pt'
+model_name = (dataset + '-10' if dataset == 'cifar' else dataset).upper() + '-' + model_name + '-' + str(n_epochs) + '-epochs.pt'
 
 ### Loading Model ###
 try:
