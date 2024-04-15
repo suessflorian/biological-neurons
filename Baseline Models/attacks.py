@@ -14,7 +14,7 @@ def fgsm_attack(model, loss_fn, images, labels, epsilon):
     return perturbed_image, output.argmax(dim = -1)
 
 def foolbox_attack(model, images, labels, attack, epsilons):
-    raise NotImplementedError('Function "foolbox_attack" is not finished.')
+    # raise NotImplementedError('Function "foolbox_attack" is not finished.')
     model.eval()
     # Attack on a single batch
     fmodel = fb.PyTorchModel(model, bounds=(0,1))

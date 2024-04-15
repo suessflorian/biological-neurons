@@ -35,18 +35,34 @@ def plot_attack(original_images,
                 original_predictions, 
                 adversarial_predictions, 
                 index, 
-                categories=None):
+                dataset):
 
+    if dataset == 'fashion':
+        categories = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+    elif dataset == 'cifar':
+        categories = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+    elif dataset == "mnist":
+        categories = [x for x in range(10)]
+    else:
+        raise ValueError('Function "plot_attack" needs to be updated for this dataset.')
+
+    true_label = categories[original_labels[index]]
+    predicted_label = categories[original_predictions[index]]
+    adversarial_prediction = categories[adversarial_predictions[index]]
+    
+    original_image = original_images[index].permute(1, 2, 0) if dataset == 'cifar' else original_images[index, 0]
+    raw_attack = raw_attacks[index].permute(1, 2, 0) if dataset == 'cifar' else raw_attacks[index, 0]
+    perturbed_image = perturbed_images[index].permute(1, 2, 0) if dataset == 'cifar' else perturbed_images[index, 0]
+    
     fig, axs = plt.subplots(1,3)
-    axs[0].imshow(original_images[index,0])
-    axs[1].imshow(raw_attacks[index,0])
-    axs[2].imshow(perturbed_images[index,0])
+    axs[0].imshow(original_image)
+    axs[1].imshow(raw_attack)
+    axs[2].imshow(perturbed_image)
     axs[0].set_title('Original Image')
     axs[1].set_title('Raw Attack')
     axs[2].set_title('Perturbed Image')
-    if categories is not None:
-        fig.suptitle(f'True: {categories[original_labels[index]]},\nPredicted: {categories[original_predictions[index]]},\nAdversarial: {categories[adversarial_predictions[index]]}')
-        plt.tight_layout(); fig.subplots_adjust(top=1.1)
+    fig.suptitle(f'True: {true_label},\nPredicted: {predicted_label},\nAdversarial: {adversarial_prediction}')
+    plt.tight_layout(); fig.subplots_adjust(top=1.1)
     plt.show()
 
 # WARNING: Implementation from: https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron

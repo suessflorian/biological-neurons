@@ -1,6 +1,7 @@
 import torch
 import torchvision
 from utils import load_data, plot_attack
+from scripts import test_model
 from models import SimpleParaLif, SimpleSNN, LeNet5_MNIST, LargerSNN
 from attacks import foolbox_attack
 import foolbox as fb
@@ -29,7 +30,7 @@ spike_mode = 'SB'
 use_train_data = True
 n_batches_to_run = 2
 attack = fb.attacks.LinfDeepFoolAttack()
-epsilons = 0.1
+epsilons = 0.01
 plot = True
 
 ### Model Loading ###
@@ -39,8 +40,8 @@ plot = True
 # n_epochs = 5
 
 dataset = 'mnist'
-model_name = 'LeNet5'
-n_epochs = 3
+model_name = 'SimpleParaLIF'
+n_epochs = 5
 
 
 ############################## Model ##############################
@@ -48,8 +49,8 @@ n_epochs = 3
 # model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
-model = LeNet5_MNIST()
-# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = LeNet5_MNIST()
+model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
 model = model.to(device)
@@ -80,6 +81,10 @@ transforms = torchvision.transforms.Compose([
 
 dataset, loader = load_data(model_name.split('-')[0], path='data', train=use_train_data, batch_size=batch_size)
 
+############################## Data ##############################
+
+test_accuracy = test_model(model, loader=loader, device=device)
+print(f'\nModel\'s Accuracy: {test_accuracy * 100:.2f}%\n')
 
 
 ############################## Attacks ##############################
@@ -91,27 +96,31 @@ perturbed_images = []
 perturbed_predictions = []
 original_predictions = []
 original_images = []
+original_labels = []
 n_total = 0
 
 batch_count = 0
 for i, (images, labels) in enumerate(loader):
-    print(i)
+    
     images, labels = images.to(device), labels.to(device)
-    n_total += len(labels)
-    raw_attack, perturbed_image, perturbed_prediction, original_prediction = foolbox_attack(model, images=images, labels=labels, attack=attack, epsilons=epsilons)
-    print(raw_attack.shape)
+    raw_attack, perturbed_image, perturbed_prediction, original_prediction = foolbox_attack(model, 
+                                                                                            images=images, 
+                                                                                            labels=labels, 
+                                                                                            attack=attack, 
+                                                                                            epsilons=epsilons)
     if i == 5: 
         break
     if raw_attack is None: # no attack found
-        
         continue
     
     correct_pre_attack = (original_prediction == labels)
     correct_post_attack = (perturbed_prediction == labels)
     
-    successful_attack_indices = (correct_pre_attack & ~correct_pre_attack).view(-1)
-    print(successful_attack_indices)
-    if successful_attack_indices.sum().item() == 0:
+    successful_attack_indices = (correct_pre_attack & ~correct_post_attack).view(-1)
+    n_successful_attacks = successful_attack_indices.sum().item()
+    print(f'Iteration: {i}, Successful Attacks: [{n_successful_attacks}/{batch_size}]')
+    
+    if n_successful_attacks == 0:
         continue
     
     raw_attacks.append(raw_attack[successful_attack_indices])
@@ -119,17 +128,45 @@ for i, (images, labels) in enumerate(loader):
     perturbed_predictions.append(perturbed_prediction[successful_attack_indices])
     original_predictions.append(original_prediction[successful_attack_indices])
     original_images.append(images[successful_attack_indices])
+    original_labels.append(labels[successful_attack_indices])
     
     batch_count += 1
+    n_total += len(labels)
     
     if batch_count == n_batches_to_run:
         break
 
-print(len(raw_attacks))
 raw_attacks = torch.cat(raw_attacks, dim=0)
 perturbed_images = torch.cat(perturbed_images, dim=0)
 perturbed_predictions = torch.cat(perturbed_predictions, dim=0)
 original_predictions = torch.cat(original_predictions, dim=0)
 original_images = torch.cat(original_images, dim=0)
+original_labels = torch.cat(original_labels, dim=0)
 
-plot_attack(original_images, raw_attacks, perturbed_images, index=0)
+print(f"\nNumber of Successful Attacks: {raw_attacks.shape[0]}")
+print(f"Number of Total Images: {n_total}")
+if n_total > 0:
+    print(f"Attack Success Rate: {raw_attacks.shape[0] / n_total*100:.2f}%\n")
+else:
+    print(f'No successful attacks found in {n_batches_to_run} batches.\n') 
+
+############################## Plotting ##############################
+
+user_input = 'y' if plot else 'n'
+index = 0
+while user_input == 'y' and index < len(original_labels):
+    plot_attack(original_images, 
+                raw_attacks, 
+                perturbed_images, 
+                original_labels, 
+                original_predictions, 
+                perturbed_predictions, 
+                index=index, 
+                dataset=model_name.split('-')[0].lower())
+
+    user_input = input('Print More? [y, n]: ')
+    index += 1
+
+if index == len(original_labels):
+    print('No more to print.')
+    
