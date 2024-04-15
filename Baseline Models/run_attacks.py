@@ -37,6 +37,7 @@ plot = True
 ### Attacks ###
 
 attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
+# attack = fb.attacks.BoundaryAttack()
 
 ### Model Loading ###
 
@@ -103,6 +104,7 @@ original_predictions = []
 original_images = []
 original_labels = []
 n_total = 0
+n_total_correct = 0
 
 batch_count = 0
 for i, (images, labels) in enumerate(loader):
@@ -124,6 +126,8 @@ for i, (images, labels) in enumerate(loader):
     successful_attack_indices = (correct_pre_attack & ~correct_post_attack).view(-1)
     n_successful_attacks = successful_attack_indices.sum().item()
     print(f'Iteration: {i}, Successful Attacks: [{n_successful_attacks}/{batch_size}]')
+    
+    n_total_correct += correct_pre_attack.sum().item()
     
     if n_successful_attacks == 0:
         continue
@@ -152,9 +156,9 @@ original_images = torch.cat(original_images, dim=0)
 original_labels = torch.cat(original_labels, dim=0)
 
 print(f"\nNumber of Successful Attacks: {raw_attacks.shape[0]}")
-print(f"Number of Total Images: {n_total}")
+print(f"Number of Total Images Examined: {n_total}")
 if n_total > 0:
-    print(f"Attack Success Rate: {raw_attacks.shape[0] / n_total*100:.2f}%\n")
+    print(f"Attack Success Rate: {raw_attacks.shape[0] / n_total_correct*100:.2f}%\n")
 else:
     print(f'No successful attacks found in {n_batches_to_run} batches.\n') 
 
