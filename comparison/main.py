@@ -30,23 +30,18 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 print('==> Preparing data..')
 
-# Mean values: (0.4914, 0.4822, 0.4465) for R, G, B channels respectively.
-# Std Dev values: (0.2023, 0.1994, 0.2010) for R, G, B channels respectively.
-# Don't be alarmed at the magic numbers - these are well known values for CIFAR-10 dataset.
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
 transform_test = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-train_loader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True)
+train_loader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True)
 
 testset = torchvision.datasets.CIFAR10( root='./data', train=False, download=True, transform=transform_test)
 test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
@@ -74,7 +69,7 @@ model_dict = {
     'SimpleDLA': SimpleDLA(),
     'DLA': DLA(),
     'LeNet': {"default": LeNet(), "LIF": LeNet_LIF()},
-    'LeNet5': LeNet5(10),
+    'LeNet5': {"default": LeNet5(), "LIF": LeNet5_LIF()},
 }
 if args.model not in model_dict:
     raise ValueError(f"Model {args.model} not recognized. Available models: {list(model_dict.keys())}")
@@ -89,21 +84,24 @@ else:
 
 net = net.to(device)
 
-print(f'==> Building {args.model} model..')
-
+print(f'==> Building "{args.variant}" {args.model} model..')
 
 if args.resume:
     checkpoint_path = f'./checkpoint/ckpt_{args.model}_{args.variant}.pth'
     if os.path.isfile(checkpoint_path):
         print('==> Resuming from checkpoint..')
         checkpoint = torch.load(checkpoint_path)
-        net.load_state_dict(checkpoint['net'])
+        if args.variant == 'LIF':
+            checkpoint['net'] = {k: v for k, v in checkpoint['net'].items() if 'mem' not in k}
+            net.load_state_dict(checkpoint['net'], strict=False)
+        else:
+            net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+optimizer = optim.SGD(net.parameters(), lr=args.lr) # momentum=0.9, weight_decay=5e-4
+# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
 def train(epoch):
@@ -169,4 +167,4 @@ def test(epoch):
 for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
     test(epoch)
-    scheduler.step()
+    # scheduler.step()

@@ -1,3 +1,7 @@
+# Comparison between more well known architectures
+`classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')`
+
+
 Models available to use...
 
 - [VGG11,VGG13,VGG16,VGG19](https://arxiv.org/abs/1409.1556)
