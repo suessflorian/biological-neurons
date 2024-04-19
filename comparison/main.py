@@ -49,10 +49,10 @@ test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 model_dict = {
-    'VGG11': VGG('VGG11'),
-    'VGG13': VGG('VGG13'),
-    'VGG16': VGG('VGG16'),
-    'VGG19': VGG('VGG19'),
+    'VGG11': {"default": VGG('VGG11'), "LIF": VGG_LIF('VGG11')},
+    'VGG13': {"default": VGG('VGG13'), "LIF": VGG_LIF('VGG13')},
+    'VGG16': {"default": VGG('VGG16'), "LIF": VGG_LIF('VGG16')},
+    'VGG19': {"default": VGG('VGG19'), "LIF": VGG_LIF('VGG19')},
     'ResNet18': ResNet18(),
     'ResNet34': ResNet34(),
     'ResNet101': ResNet101(),
