@@ -33,6 +33,11 @@ print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(15),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+    transforms.RandomVerticalFlip(p=0.05),
+    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1), shear=10),
+    transforms.RandomPerspective(distortion_scale=0.05, p=0.1),
     transforms.ToTensor(),
 ])
 
@@ -100,7 +105,7 @@ if args.resume:
         start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr) # momentum=0.9, weight_decay=5e-4
+optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
@@ -164,7 +169,7 @@ def test(epoch):
     else:
         print('Not improved, skipping save..')
 
-for epoch in range(start_epoch, start_epoch+200):
+for epoch in range(start_epoch, start_epoch+50):
     train(epoch)
     test(epoch)
     scheduler.step()

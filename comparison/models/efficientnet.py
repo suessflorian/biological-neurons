@@ -1,8 +1,5 @@
-'''EfficientNet in PyTorch.
-
-Paper: "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks".
-
-Reference: https://github.com/keras-team/keras-applications/blob/master/keras_applications/efficientnet.py
+'''
+https://github.com/keras-team/keras-applications/blob/master/keras_applications/efficientnet.py
 '''
 import torch
 import torch.nn as nn

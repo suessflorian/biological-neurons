@@ -1,7 +1,5 @@
 from .vgg import *
 from .lenet import *
-from .senet import *
-from .pnasnet import *
 from .densenet import *
 from .googlenet import *
 from .resnet import *

@@ -1,4 +1,3 @@
-'''DenseNet in PyTorch.'''
 import math
 
 import torch

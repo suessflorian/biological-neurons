@@ -1,12 +1,5 @@
-'''Simplified version of DLA in PyTorch.
-
-Note this implementation is not identical to the original paper version.
-But it seems works fine.
-
-See dla.py for the original paper version.
-
-Reference:
-    Deep Layer Aggregation. https://arxiv.org/abs/1707.06484
+'''
+https://arxiv.org/abs/1707.06484
 '''
 import torch
 import torch.nn as nn
