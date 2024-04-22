@@ -205,42 +205,50 @@ class SimpleParaLif(nn.Module):
         x = self.paralif3(x)
         x = self.paralif4(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)
-    
-    
-# class testParaLIF(nn.Module):
-#     torch.manual_seed(1123)
-#     def __init__(self, input_size, device, spike_mode='SB', recurrent=False, num_steps=10, 
-#                  fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
-#         super().__init__()
+        return x.softmax(dim=1)            
+
+class GeneralParaLIF(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, layer_sizes, device, spike_mode='SB', recurrent=False, num_steps=10, 
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
         
-#         self.num_steps = num_steps
-
-#         # Set the spiking function
-#         self.paralif1 = ParaLIF(input_size, 2**10, device, spike_mode, recurrent, fire, tau_mem,
-#                                 tau_syn, time_step)
-#         self.paralif2 = ParaLIF(2**10, 2**9, device, spike_mode, recurrent, fire, tau_mem,
-#                                 tau_syn, time_step)
-#         self.paralif3 = ParaLIF(2**9, 2**8, device, spike_mode, recurrent, fire, tau_mem,
-#                                 tau_syn, time_step) #
-#         self.paralif4 = ParaLIF(2**8, 2**7, device, spike_mode, recurrent, fire, tau_mem,
-#                                 tau_syn, time_step) #
-#         self.paralif5 = ParaLIF(2**7, 2**6, device, spike_mode, recurrent, fire, tau_mem,
-#                                 tau_syn, time_step)
-#         self.paralif6 = ParaLIF(2**6, 10, device, spike_mode, recurrent, fire, tau_mem,
-#                                 tau_syn, time_step)
+        self.num_steps = num_steps
+        self.device = device
+        self.spike_mode = spike_mode
+        self.recurrent = recurrent
+        self.fire = fire
+        self.tau_mem = tau_mem
+        self.tau_syn = tau_syn
+        self.time_step = time_step
+        self.layer_sizes = layer_sizes
+        
+        self._create_layers()
+        
     
-#     def forward(self, images):
-#         flattened = images.view(images.size(0), -1)  # (batch, colour_channel*width*height)
-#         spike_train = rate(flattened, num_steps=self.num_steps)      
-#         spike_train = torch.swapaxes(spike_train, 0, 1)
+    def forward(self, images):
+        flattened = images.view(images.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        spike_train = torch.swapaxes(spike_train, 0, 1)
 
-#         x = self.paralif1(spike_train)
-#         x = self.paralif2(x)
-#         x = self.paralif3(x)
-#         x = self.paralif4(x)
-#         x = self.paralif5(x)
-#         x = self.paralif6(x)
-#         x = torch.mean(x,1)
-#         return x.softmax(dim=1)
+        x = self.layers(spike_train)
+        x = torch.mean(x,1)
+        return x.softmax(dim=1)
+
+    def _create_layers(self):
+        layers = []
+        for size1, size2 in zip(self.layer_sizes, self.layer_sizes[1:]):
+            layers.append(ParaLIF(
+                input_size=size1,
+                hidden_size=size2,
+                device=self.device,
+                spike_mode=self.spike_mode, 
+                recurrent=self.recurrent, 
+                fire=self.fire, 
+                tau_mem=self.tau_mem,
+                tau_syn=self.tau_syn, 
+                time_step=self.time_step
+            ))
+        self.layers = nn.Sequential(*layers)
+        
     
