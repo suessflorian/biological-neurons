@@ -2,6 +2,7 @@ import torch
 import torchvision
 import foolbox as fb
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 def printf(string):
     # function for printing stuff that gets removed from the output each iteration
