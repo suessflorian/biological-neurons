@@ -4,6 +4,7 @@ import torch.nn as nn
 import snntorch as snn
 from neurons import ParaLIF
 from utils import rate
+from snntorch import utils as utls
 
 class LeNet5_CIFAR(nn.Module):
     def __init__(self):
@@ -87,6 +88,10 @@ class SimpleSNN(nn.Module):
         self.num_steps = num_steps
 
     def forward(self, images):  # images (batch, colour_channel, height, width)
+        utls.reset(self.lif1)
+        utls.reset(self.lif2)
+        utls.reset(self.lif3)
+        
         mem1 = self.lif1.init_leaky()
         mem2 = self.lif2.init_leaky()
         mem3 = self.lif3.init_leaky()
@@ -142,6 +147,11 @@ class LargerSNN(nn.Module):
         self.num_steps = num_steps
 
     def forward(self, images):  # images (batch, colour_channel, height, width)
+        utls.reset(self.lif1)
+        utls.reset(self.lif2)
+        utls.reset(self.lif3)
+        utls.reset(self.lif4)
+        
         mem1 = self.lif1.init_leaky()
         mem2 = self.lif2.init_leaky()
         mem3 = self.lif3.init_leaky()

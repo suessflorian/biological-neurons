@@ -12,12 +12,12 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 ##### Hyperparameters #####
 
 batch_size = 256
-learning_rate = 0.01 # use 0.001 for ParaLIF
-n_epochs = 50
+learning_rate = 0.001 # use 0.001 for ParaLIF
+n_epochs = 5
 
-optimizer = torch.optim.SGD # Best for SimpleSNN
+# optimizer = torch.optim.SGD # Best for SimpleSNN
 # optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
-# optimizer = torch.optim.Adamax # Best for ParaLIF
+optimizer = torch.optim.Adamax # Best for ParaLIF
 
 
 
@@ -27,24 +27,24 @@ num_steps = 20
 tau_mem = 0.02
 tau_syn = 0.02
 decay_rate = 0.
-spike_mode = 'SB'
+spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT', 'GS']
 
 
 ##### Options #####
 
 dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
-train = False # Set to False if model training is not required
-plot = True
+train = True # Set to False if model training is not required
+plot = False
 
-model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
+# model = SimpleSNN(28*28, num_steps=30) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
-load_name = 'FASHION-SimpleSNN-5-epochs' # set to None if loading not required
-save_name = None #'CIFAR-10-LargerSNN-100-epochs' # set to None if saving not required
+load_name = None #'FASHION-SimpleParaLIF-20-epochs' # set to None if loading not required
+save_name = None #'FASHION-SimpleParaLIF-50-epochs' # set to None if saving not required
 
 
 ##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####
