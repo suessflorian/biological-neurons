@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN #,testParaLIF
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF
 from scripts import train_model, test_model
 from utils import load_data
 import time
@@ -40,8 +40,10 @@ plot = False
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
-# model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
+# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = GeneralParaLIF(layer_sizes=(3*32*32, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
 load_name = None #'FASHION-SimpleParaLIF-20-epochs' # set to None if loading not required
 save_name = None #'FASHION-SimpleParaLIF-50-epochs' # set to None if saving not required
