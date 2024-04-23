@@ -26,7 +26,7 @@ class LeNet(nn.Module):
         return out
 
 class LeNet_LIF(nn.Module):
-    def __init__(self, decay_rate=0.9, window=4):
+    def __init__(self, decay_rate=0.9, window=20):
         super(LeNet_LIF, self).__init__()
         self.window = window
 
@@ -98,7 +98,7 @@ class LeNet5(nn.Module):
         return self.classifier(x)
 
 class LeNet5_LIF(nn.Module):
-    def __init__(self, decay_rate=0.9, window=4):
+    def __init__(self, decay_rate=0.9, window=10):
         super(LeNet5_LIF, self).__init__()
         
         in_channels = 3

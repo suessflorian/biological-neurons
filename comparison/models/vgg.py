@@ -12,7 +12,7 @@ cfg = {
 }
 
 class VGG_LIF(nn.Module):
-    def __init__(self, vgg_name, decay_rate=0.9, window=4):
+    def __init__(self, vgg_name, decay_rate=0.9, window=7):
         super(VGG_LIF, self).__init__()
         self.window = window
         self.features = self._make_layers(cfg[vgg_name], decay_rate)

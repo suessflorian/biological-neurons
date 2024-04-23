@@ -46,10 +46,10 @@ transform_test = transforms.Compose([
 ])
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-train_loader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True)
+train_loader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, drop_last=True)
 
 testset = torchvision.datasets.CIFAR10( root='./data', train=False, download=True, transform=transform_test)
-test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
+test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, drop_last=True)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
@@ -75,6 +75,7 @@ model_dict = {
     'DLA': DLA(),
     'LeNet': {"default": LeNet(), "LIF": LeNet_LIF()},
     'LeNet5': {"default": LeNet5(), "LIF": LeNet5_LIF()},
+    'CifarNet': {"default": False, "LIF": CifarNet()},
 }
 if args.model not in model_dict:
     raise ValueError(f"Model {args.model} not recognized. Available models: {list(model_dict.keys())}")
@@ -106,7 +107,8 @@ if args.resume:
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+# optimizer = optim.Adam(net.parameters(), lr=args.lr)
+# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
 def train(epoch):
@@ -153,8 +155,8 @@ def test(epoch):
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
     acc = 100.*correct/total
-    if acc > best_acc:
-        print('Saving..')
+    if acc >= best_acc:
+        print('Same or better accuracy - saving..')
         checkpoint_dir = './checkpoint'
         if not os.path.isdir(checkpoint_dir):
             os.mkdir(checkpoint_dir)
@@ -169,7 +171,7 @@ def test(epoch):
     else:
         print('Not improved, skipping save..')
 
-for epoch in range(start_epoch, start_epoch+50):
+for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
     test(epoch)
-    scheduler.step()
+    # scheduler.step()

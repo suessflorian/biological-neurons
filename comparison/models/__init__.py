@@ -9,3 +9,4 @@ from .mobilenet import *
 from .efficientnet import *
 from .dla_simple import *
 from .dla import *
+from .cifarnet import *
