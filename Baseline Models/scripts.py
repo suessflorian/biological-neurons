@@ -2,10 +2,10 @@ import torch
 import torchvision
 from utils import printf
 
-def train_model(model, loader, optimizer, n_epochs, device):
+def train_model(model, loader, optimizer, n_epochs, device, val_loader=None):
     criterion = torch.nn.CrossEntropyLoss()
 
-    train_loss, train_acc, test_acc = [], [], []
+    train_loss, train_acc, val_acc = [], [], []
 
     for epoch in range(n_epochs):
         model.train()
@@ -33,13 +33,18 @@ def train_model(model, loader, optimizer, n_epochs, device):
         
         train_loss.append(epoch_loss)
         train_acc.append(n_correct / n_total)
+        
+        if val_loader is not None:
+            val_acc.append(test_model(model, val_loader, device=device))
+            
     
     print() # for prettiness
     
     results = {
         'epochs': torch.arange(1, n_epochs + 1),
         'train losses': train_loss,
-        'train accuracies': train_acc
+        'train accuracies': train_acc,
+        'val accuracies': val_acc
     }
     
     return model, results

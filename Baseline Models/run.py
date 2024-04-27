@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein
 from scripts import train_model, test_model
 from utils import load_data
 import time
@@ -12,7 +12,7 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 ##### Hyperparameters #####
 
 batch_size = 256
-learning_rate = 0.001 # use 0.001 for ParaLIF
+learning_rate = 0.01 # use 0.001 for ParaLIF
 n_epochs = 5
 
 # optimizer = torch.optim.SGD # Best for SimpleSNN
@@ -33,8 +33,8 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 ##### Options #####
 
 dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
-train = True # Set to False if model training is not required
-plot = False
+train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
+plot = True
 
 # model = SimpleSNN(28*28, num_steps=30) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
@@ -42,11 +42,18 @@ plot = False
 # model = LeNet5_MNIST()
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
-model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
+model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 
 load_name = None #'FASHION-SimpleParaLIF-20-epochs' # set to None if loading not required
 save_name = None #'FASHION-SimpleParaLIF-50-epochs' # set to None if saving not required
+
+
+
+
+
+
 
 
 ##### ----- Nothing below here needs to be changed unless you're using a new dataset ----- #####
@@ -77,7 +84,7 @@ if load_name:
         else:
             model.load_state_dict(state_dict)
     except RuntimeError:
-        raise RuntimeError('SNNTorch Models cannot loaded properly yet.')
+        raise RuntimeError('Ask Peter for help with loading SNNTorch models.')
     except:
         print('Model Not Found. Using Untrained Model.')
 
@@ -92,11 +99,14 @@ if train:
                                 loader=train_loader, 
                                 optimizer=optimizer, 
                                 n_epochs=n_epochs, 
-                                device=device)
+                                device=device,
+                                val_loader=test_loader)
     print(f'\nTraining time: {time.time() - start_time:.1f} seconds.')
     if plot:
         import matplotlib.pyplot as plt
         plt.plot(results['epochs'], results['train accuracies'])
+        plt.plot(results['epochs'], results['val accuracies'])
+        plt.legend(('Train', 'Test'))
         plt.show()
 
 
@@ -111,7 +121,7 @@ print(f'Train Accuracy: {train_accuracy * 100:.2f}%\n' +
 
 ##### Saving #####
 
-if save_name and train and input('SAVE??: ') == 'y':
+if save_name and train and input('Do you want to save??: ').lower() in ['y', 'yes']:
     state_dict = model.state_dict()
     if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN):
         state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}

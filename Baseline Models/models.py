@@ -251,4 +251,262 @@ class GeneralParaLIF(nn.Module):
             ))
         self.layers = nn.Sequential(*layers)
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------- Experimental models ----------------------------------------------
+
+
+class EncConvParaLIF(nn.Module):
+    '''
+    A model to test out the randomness induced by rate encoding and then averaging across the
+    time dimension. This process brings the input back to its original shape and is then sent
+    through typical ParaLIF layers.
+    '''
+    def __init__(self, layer_sizes, device, spike_mode='SB', recurrent=False, num_steps=10, 
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
     
+        super().__init__()    
+        self.num_steps = num_steps
+        self.device = device
+        self.spike_mode = spike_mode
+        self.recurrent = recurrent
+        self.fire = fire
+        self.tau_mem = tau_mem
+        self.tau_syn = tau_syn
+        self.time_step = time_step
+        self.layer_sizes = layer_sizes
+        
+        self._create_layers()
+        
+        pool = nn.MaxPool2d
+        self.conv = nn.Conv2d(1, 10, kernel_size=5, stride=1)
+        self.bn = nn.BatchNorm2d(10)
+        self.pool = pool(kernel_size=2, stride=1)
+    
+    def forward(self, images):
+        # Expectation across the time dimension, convolution, pooling
+        images = rate(images, self.num_steps).mean(dim=0).to(self.device) #.swapaxes(0, 1)
+        images = torch.tanh(self.bn(self.conv(images)))
+        images = self.pool(images)
+        
+        # TYPICAL PARALIF ARCHITECTURE
+        flattened = images.view(images.size(0), -1)
+        spike_train = rate(flattened, self.num_steps).swapaxes(0, 1).to(self.device)
+        x = self.layers(spike_train)
+        x = torch.mean(x,1)
+        return x.softmax(dim=1)
+    
+    
+    def _create_layers(self):
+        layers = []
+        for size1, size2 in zip(self.layer_sizes, self.layer_sizes[1:]):
+            layers.append(ParaLIF(
+                input_size=size1,
+                hidden_size=size2,
+                device=self.device,
+                spike_mode=self.spike_mode, 
+                recurrent=self.recurrent, 
+                fire=self.fire, 
+                tau_mem=self.tau_mem,
+                tau_syn=self.tau_syn, 
+                time_step=self.time_step
+            ))
+        self.layers = nn.Sequential(*layers)
+        
+
+class Frankenstein(nn.Module):
+    '''
+    This model is an experiment of combining the LeNet architecture with ParaLIF neurons.
+    This model achieves 90.46% test accuracy on Fashion after 20 epochs.
+    
+    There are five branches:
+    
+    1. Images -> rate encoding ->  ParaLIF layers -> output
+    2. Images -> LeNet1 -> output
+    3. LeNet1 pre-output representations -> ParaLIF layers -> output
+    4. Images -> LeNet2 -> output
+    5. Images -> LeNet3 -> output
+    
+    Notes:
+    LeNet3 only uses 1x1 convolutions
+    LeNet1 and 2 have different architectures
+    '''
+    def __init__(self, layer_sizes, device, spike_mode='SB', recurrent=False, num_steps=10, 
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+    
+        super().__init__()    
+        self.num_steps = num_steps
+        self.device = device
+        self.spike_mode = spike_mode
+        self.recurrent = recurrent
+        self.fire = fire
+        self.tau_mem = tau_mem
+        self.tau_syn = tau_syn
+        self.time_step = time_step
+        self.layer_sizes = layer_sizes
+        
+        self.layers = self._create_layers()
+        
+        self.conv = nn.Conv2d(1, 10, kernel_size=5, stride=1)
+        self.bn = nn.BatchNorm2d(10)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=1)
+        
+        # Alphas control the weighting of the different branches on the final output
+        self.alpha = nn.Parameter(torch.tensor([0.]).to(device))
+        self.alpha2 = nn.Parameter(torch.tensor([0.]).to(device))
+        self.alpha3 = nn.Parameter(torch.tensor([0.]).to(device))
+        self.alpha4 = nn.Parameter(torch.tensor([0.]).to(device))
+        self.alpha5 = nn.Parameter(torch.tensor([0.]).to(device))
+        
+        # These are the layer sizes for the ParaLIF model learning from the first LeNet's representations
+        new_layer_sizes = (84, 256, 512, 128, 32, 10)
+        self.layers2 = self._create_layers(new_layer_sizes)
+        
+        # LENET
+        self.lenet_conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=0)
+        self.lenet_bn1 = nn.BatchNorm2d(6)
+        self.lenet_pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.lenet_conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1, padding=0)
+        self.lenet_bn2 = nn.BatchNorm2d(16)
+        self.lenet_fc1 = nn.Linear(16 * 4 * 4, 120) 
+        self.lenet_bn3 = nn.BatchNorm1d(120)
+        self.lenet_fc2 = nn.Linear(120, 84)
+        self.lenet_bn4 = nn.BatchNorm1d(84)
+        self.lenet_fc3 = nn.Linear(84, 10)
+        
+        # LENET2
+        self.lenet2_conv1 = nn.Conv2d(1, 24, kernel_size=7, stride=1, padding=0)
+        self.lenet2_bn1 = nn.BatchNorm2d(24)
+        self.lenet2_pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.lenet2_conv2 = nn.Conv2d(24, 48, kernel_size=5, stride=1, padding=0)
+        self.lenet2_pool2 = nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
+        self.lenet2_bn2 = nn.BatchNorm2d(48)
+        self.lenet2_fc1 = nn.Linear(48 * 3 * 3, 128) 
+        self.lenet2_bn3 = nn.BatchNorm1d(128)
+        self.lenet2_fc2 = nn.Linear(128, 64)
+        self.lenet2_bn4 = nn.BatchNorm1d(64)
+        self.lenet2_fc3 = nn.Linear(64, 10)
+        
+        # LENET3 - only 1x1 convolutions here
+        
+        self.lenet3_conv1 = nn.Conv2d(1, 64, kernel_size=1)
+        self.lenet3_bn1 = nn.BatchNorm2d(64)
+        self.lenet3_pool = nn.MaxPool2d(kernel_size=3, stride=3, padding=0)
+        self.lenet3_conv2 = nn.Conv2d(64, 128, kernel_size=1, stride=1, padding=0)
+        self.lenet3_bn2 = nn.BatchNorm2d(128)
+        self.lenet3_fc1 = nn.Linear(128 * 3 * 3, 120) 
+        self.lenet3_bn3 = nn.BatchNorm1d(120)
+        self.lenet3_fc2 = nn.Linear(120, 84)
+        self.lenet3_bn4 = nn.BatchNorm1d(84)
+        self.lenet3_fc3 = nn.Linear(84, 10)
+        
+    
+    def forward(self, original_images):
+        # # EXPECTATION PART
+        
+        # random_images = rate(original_images, self.num_steps).mean(dim=0).to(self.device) #.swapaxes(0, 1)
+        
+        # # CONVOLUTIONS
+        # random_images = torch.tanh(self.bn(self.conv(random_images)))
+        # random_images = self.pool(random_images)
+        
+        
+        # # ParaLIF Branch
+        
+        flattened = original_images.view(original_images.size(0), -1)
+        spike_train = rate(flattened, self.num_steps).swapaxes(0, 1).to(self.device)
+        x = self.layers(spike_train)
+        x = torch.mean(x,1)
+        x = x.softmax(dim=1)
+        
+        
+        # LeNet branch
+        
+        x2 = self.lenet_bn1(self.lenet_conv1(original_images))
+        x2 = self.lenet_pool(F.relu(x2))
+        x2 = self.lenet_bn2(self.lenet_conv2(x2))
+        x2 = self.lenet_pool(F.relu(x2))
+        x2 = x2.view(-1, 16 * 4 * 4)
+        x2 = self.lenet_bn3(self.lenet_fc1(x2))
+        x2 = F.relu(x2)
+        x2 = self.lenet_bn4(self.lenet_fc2(x2))
+        
+        lenet_representations = x2.clone().detach()
+        
+        x2 = F.relu(x2)
+        x2 = self.lenet_fc3(x2)
+        
+        
+        # LeNet representation ParaLIF
+        
+        spike_train2 = rate(lenet_representations, self.num_steps).swapaxes(0, 1).to(self.device)
+        x3 = self.layers2(spike_train2)
+        x3 = torch.mean(x3,1)
+        x3 = x3.softmax(dim=1)
+        
+        # LeNet 2 branch
+        x4 = self.lenet2_bn1(self.lenet2_conv1(original_images))
+        x4 = self.lenet2_pool(F.tanh(x4))
+        x4 = self.lenet2_bn2(self.lenet2_conv2(x4))
+        x4 = self.lenet2_pool2(F.tanh(x4))
+        x4 = x4.view(-1, 48 * 3 * 3)
+        x4 = self.lenet2_bn3(self.lenet2_fc1(x4))
+        x4 = F.relu(x4)
+        x4 = self.lenet2_bn4(self.lenet2_fc2(x4))        
+        x4 = F.relu(x4)
+        x4 = self.lenet2_fc3(x4)
+        
+        # LeNet 3 branch
+        x5 = self.lenet3_bn1(self.lenet3_conv1(original_images))
+        x5 = self.lenet3_pool(F.relu(x5))
+        x5 = self.lenet3_bn2(self.lenet3_conv2(x5))
+        x5 = self.lenet3_pool(F.relu(x5))
+        x5 = x5.view(-1, 128 * 3 * 3)
+        x5 = self.lenet3_bn3(self.lenet3_fc1(x5))
+        x5 = F.relu(x5)
+        x5 = self.lenet3_bn4(self.lenet3_fc2(x5))        
+        x5 = F.relu(x5)
+        x5 = self.lenet3_fc3(x5)
+        
+        
+        # return (self.alpha * x + self.alpha2 * x2 + self.alpha3 * x3).softmax(dim=1)
+        return (
+            self.alpha * x +
+            self.alpha2 * x2 + 
+            self.alpha3 * x3 + 
+            self.alpha4 * x4 + 
+            self.alpha5 * x5
+            ).softmax(dim=1)
+        
+    
+    def _create_layers(self, new_layer_sizes=None):
+        layers = []
+        layer_sizes = self.layer_sizes if new_layer_sizes is None else new_layer_sizes
+        for size1, size2 in zip(layer_sizes, layer_sizes[1:]):
+            layers.append(ParaLIF(
+                input_size=size1,
+                hidden_size=size2,
+                device=self.device,
+                spike_mode=self.spike_mode, 
+                recurrent=self.recurrent, 
+                fire=self.fire, 
+                tau_mem=self.tau_mem,
+                tau_syn=self.tau_syn, 
+                time_step=self.time_step
+            ))
+        return nn.Sequential(*layers)
