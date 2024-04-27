@@ -1,4 +1,4 @@
-Note: This does not display well on github. Download and open the file instead.
+Note: If this does not display well on github, download and open the file instead.
 
 ************ Standard models ************
 MNIST-LeNet5-3-epochs.pt <- (98.95% test accuracy)
