@@ -30,7 +30,6 @@ def load_data(dataset = "mnist",
     return dataset, loader
 
 def plot_attack(original_images, 
-                raw_attacks, 
                 perturbed_images, 
                 original_labels, 
                 original_predictions, 
@@ -51,13 +50,12 @@ def plot_attack(original_images,
     predicted_label = categories[original_predictions[index]]
     adversarial_prediction = categories[adversarial_predictions[index]]
     
-    original_image = original_images[index].permute(1, 2, 0) if dataset == 'cifar' else original_images[index, 0]
-    raw_attack = raw_attacks[index].permute(1, 2, 0) if dataset == 'cifar' else raw_attacks[index, 0]
-    perturbed_image = perturbed_images[index].permute(1, 2, 0) if dataset == 'cifar' else perturbed_images[index, 0]
+    original_image = original_images[index].permute(1, 2, 0) # if dataset == 'cifar' else original_images[index, 0]
+    perturbed_image = perturbed_images[index].permute(1, 2, 0) #if dataset == 'cifar' else perturbed_images[index, 0]
     
     fig, axs = plt.subplots(1,3)
     axs[0].imshow(original_image)
-    axs[1].imshow(raw_attack)
+    axs[1].imshow(perturbed_image - original_image)
     axs[2].imshow(perturbed_image)
     axs[0].set_title('Original Image')
     axs[1].set_title('Raw Attack')
