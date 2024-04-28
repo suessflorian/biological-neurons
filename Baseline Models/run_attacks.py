@@ -63,6 +63,15 @@ model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 
+
+
+
+
+
+
+##### ----- Nothing below here needs to be changed ----- #####
+
+
 model = model.to(device)
 
 model_name = (dataset + '-10' if dataset == 'cifar' else dataset).upper() + '-' + model_name + '-' + str(n_epochs) + '-epochs.pt'
