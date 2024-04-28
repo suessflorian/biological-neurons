@@ -29,18 +29,19 @@ spike_mode = 'SB'
 
 ############################## Options ##############################
 
-use_train_data = True
+use_train_data = False # Training data is used to generate attacks if True, testing data otherwise
 n_batches_to_run = 2 # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
-max_iterations = 5 # The number of batches to run
+max_batches = 5 # The number of batches to run
 epsilons = 0.01
 plot = True
+evaluate_model = False # set to False if you know how good this model is and only want to run attacks
 
 ### Attacks ###
 
-# attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
+attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
 # attack = fb.attacks.BoundaryAttack()
 # attack = fb.attacks.DDNAttack()
-attack = fb.attacks.LinfFastGradientAttack()
+# attack = fb.attacks.LinfFastGradientAttack()
 
 ### Model Loading ###
 
@@ -48,7 +49,7 @@ attack = fb.attacks.LinfFastGradientAttack()
 # model_name = 'SimpleParaLIF'
 # n_epochs = 5
 
-dataset = 'mnist'
+dataset = 'fashion'
 model_name = 'SimpleSNN'
 n_epochs = 5
 
@@ -79,7 +80,7 @@ except RuntimeError:
 except FileNotFoundError:
     raise FileNotFoundError('Model not found. Check the directory/model name.')
 else:
-    print('Model loaded Successfully.')
+    print('Model loaded Successfully.\n')
 
 ############################## Data ##############################
 
@@ -94,9 +95,9 @@ dataset, loader = load_data(model_name.split('-')[0], path='data', train=use_tra
 
 ############################## Data ##############################
 
-test_accuracy = test_model(model, loader=loader, device=device)
-print(f'\nModel\'s Accuracy: {test_accuracy * 100:.2f}%\n')
-
+if evaluate_model:
+    test_accuracy = test_model(model, loader=loader, device=device)
+    print(f'Model\'s Accuracy: {test_accuracy * 100:.2f}%\n')
 
 ############################## Attacks ##############################
 
@@ -122,7 +123,7 @@ for i, (images, labels) in enumerate(loader):
                                                                                             labels=labels, 
                                                                                             attack=attack, 
                                                                                             epsilons=epsilons)
-    if i == max_iterations: 
+    if i == max_batches: 
         break
     if raw_attack is None: # no attack found
         continue
@@ -132,7 +133,7 @@ for i, (images, labels) in enumerate(loader):
     
     successful_attack_indices = (correct_pre_attack & ~correct_post_attack).view(-1)
     n_successful_attacks = successful_attack_indices.sum().item()
-    print(f'Iteration: {i}, Successful Attacks: [{n_successful_attacks}/{batch_size}]')
+    print(f'Batch: [{i}/{len(loader)}], Successful Attacks: [{n_successful_attacks}/{batch_size}]')
     
     n_total_correct += correct_pre_attack.sum().item()
     
