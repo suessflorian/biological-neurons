@@ -122,7 +122,7 @@ for i, (images, labels) in enumerate(loader):
                                                                                             labels=labels, 
                                                                                             attack=attack, 
                                                                                             epsilons=epsilons)
-    if i == 5: 
+    if i == max_iterations: 
         break
     if raw_attack is None: # no attack found
         continue
