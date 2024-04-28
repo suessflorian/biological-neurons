@@ -30,7 +30,7 @@ spike_mode = 'SB'
 ############################## Options ##############################
 
 use_train_data = False # Training data is used to generate attacks if True, testing data otherwise
-n_batches_to_run = 2 # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
+n_successful_batches = 2 # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
 max_batches = 5 # The number of batches to run
 epsilons = 0.01
 plot = True
@@ -142,7 +142,7 @@ for i, (images, labels) in enumerate(loader):
     
     successful_attack_indices = (correct_pre_attack & ~correct_post_attack).view(-1)
     n_successful_attacks = successful_attack_indices.sum().item()
-    print(f'Batch: [{i}/{len(loader)}], Successful Attacks: [{n_successful_attacks}/{batch_size}]')
+    print(f'Batch: [{i}/{max_batches if max_batches != float('Inf') else len(loader)}], Successful Attacks: [{n_successful_attacks}/{batch_size}]')
     
     n_total_correct += correct_pre_attack.sum().item()
     
@@ -159,7 +159,7 @@ for i, (images, labels) in enumerate(loader):
     batch_count += 1
     n_total += len(labels)
     
-    if batch_count == n_batches_to_run:
+    if batch_count == n_successful_batches:
         break
 
 if len(raw_attacks) == 0:
@@ -177,7 +177,7 @@ print(f"Number of Total Images Examined: {n_total}")
 if n_total > 0:
     print(f"Attack Success Rate: {raw_attacks.shape[0] / n_total_correct*100:.2f}%\n")
 else:
-    print(f'No successful attacks found in {n_batches_to_run} batches.\n') 
+    print(f'No successful attacks found in {n_successful_batches} batches.\n') 
 
 ############################## Plotting ##############################
 
