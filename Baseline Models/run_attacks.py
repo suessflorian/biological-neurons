@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from utils import load_data, plot_attack
+from utils import load_data, plot_attack, printf
 from scripts import test_model
 from models import SimpleParaLif, SimpleSNN, LeNet5_MNIST, LargerSNN, LeNet5_CIFAR
 from attacks import foolbox_attack
@@ -30,14 +30,17 @@ spike_mode = 'SB'
 ############################## Options ##############################
 
 use_train_data = True
-n_batches_to_run = 2
+n_batches_to_run = 2 # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
+max_iterations = 5 # The number of batches to run
 epsilons = 0.01
 plot = True
 
 ### Attacks ###
 
-attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
+# attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
 # attack = fb.attacks.BoundaryAttack()
+# attack = fb.attacks.DDNAttack()
+attack = fb.attacks.LinfFastGradientAttack()
 
 ### Model Loading ###
 
@@ -45,16 +48,16 @@ attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/sta
 # model_name = 'SimpleParaLIF'
 # n_epochs = 5
 
-dataset = 'cifar'
-model_name = 'LeNet5'
-n_epochs = 50
+dataset = 'mnist'
+model_name = 'SimpleSNN'
+n_epochs = 5
 
 
 ############################## Model ##############################
 
-# model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
+model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
-model = LeNet5_CIFAR()
+# model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
@@ -71,10 +74,12 @@ try:
         model.load_state_dict(state_dict, strict=False)
     else:
         model.load_state_dict(state_dict)
-except:
-    raise FileNotFoundError('Model not found.')
-
-
+except RuntimeError:
+    raise RuntimeError("Are the models you're loading and initialising the same?")
+except FileNotFoundError:
+    raise FileNotFoundError('Model not found. Check the directory/model name.')
+else:
+    print('Model loaded Successfully.')
 
 ############################## Data ##############################
 
@@ -95,6 +100,8 @@ print(f'\nModel\'s Accuracy: {test_accuracy * 100:.2f}%\n')
 
 ############################## Attacks ##############################
 
+
+print('Running attacks...')
 
 # We only save the successful attacks
 raw_attacks = []
