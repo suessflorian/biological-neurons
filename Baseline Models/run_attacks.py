@@ -31,17 +31,17 @@ spike_mode = 'SB'
 
 use_train_data = False # Training data is used to generate attacks if True, testing data otherwise
 n_successful_batches = 2 # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
-max_batches = 5 # The number of batches to run
+max_batches = 10 # The number of batches to run
 epsilons = 0.01
 plot = True
-evaluate_model = True # set to False if you know how good this model is and only want to run attacks
+evaluate_model = False # set to False if you know how good this model is and only want to run attacks
 
 ### Attacks ###
 
-attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
+# attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
 # attack = fb.attacks.BoundaryAttack()
 # attack = fb.attacks.DDNAttack()
-# attack = fb.attacks.LinfFastGradientAttack()
+attack = fb.attacks.LinfFastGradientAttack()
 
 ### Model Loading ###
 
@@ -49,7 +49,7 @@ attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/sta
 # model_name = 'SimpleParaLIF'
 # n_epochs = 5
 
-dataset = 'fashion'
+dataset = 'mnist'
 model_name = 'SimpleSNN'
 n_epochs = 5
 
@@ -114,7 +114,6 @@ if evaluate_model:
 print('Running attacks...')
 
 # We only save the successful attacks
-raw_attacks = []
 perturbed_images = []
 perturbed_predictions = []
 original_predictions = []
@@ -148,8 +147,7 @@ for i, (images, labels) in enumerate(loader):
     
     if n_successful_attacks == 0:
         continue
-    
-    raw_attacks.append(raw_attack[successful_attack_indices])
+
     perturbed_images.append(perturbed_image[successful_attack_indices])
     perturbed_predictions.append(perturbed_prediction[successful_attack_indices])
     original_predictions.append(original_prediction[successful_attack_indices])
@@ -162,30 +160,26 @@ for i, (images, labels) in enumerate(loader):
     if batch_count == n_successful_batches:
         break
 
-if len(raw_attacks) == 0:
+if len(perturbed_images) == 0:
     raise ValueError('No Attacks Found.')
 
-raw_attacks = torch.cat(raw_attacks, dim=0)
 perturbed_images = torch.cat(perturbed_images, dim=0)
 perturbed_predictions = torch.cat(perturbed_predictions, dim=0)
 original_predictions = torch.cat(original_predictions, dim=0)
 original_images = torch.cat(original_images, dim=0)
 original_labels = torch.cat(original_labels, dim=0)
 
-print(f"\nNumber of Successful Attacks: {raw_attacks.shape[0]}")
+print(f"\nNumber of Successful Attacks: {perturbed_images.shape[0]}")
 print(f"Number of Total Images Examined: {n_total}")
 if n_total > 0:
-    print(f"Attack Success Rate: {raw_attacks.shape[0] / n_total_correct*100:.2f}%\n")
+    print(f"Attack Success Rate: {perturbed_images.shape[0] / n_total_correct*100:.2f}%\n")
 else:
     print(f'No successful attacks found in {n_successful_batches} batches.\n') 
 
 ############################## Plotting ##############################
 
-user_input = 'y' if plot else 'n'
-index = 0
-while user_input == 'y' and index < len(original_labels):
+for index in range(len(original_images)):
     plot_attack(original_images, 
-                raw_attacks, 
                 perturbed_images, 
                 original_labels, 
                 original_predictions, 
@@ -193,9 +187,5 @@ while user_input == 'y' and index < len(original_labels):
                 index=index, 
                 dataset=model_name.split('-')[0].lower())
 
-    user_input = input('Print More? [y, n]: ')
-    index += 1
-
-if index == len(original_labels):
-    print('No more to print.')
-    
+    if index < len(original_images) - 1 and input('Print More? [y, n]: ') == 'n':
+        break
