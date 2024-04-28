@@ -34,7 +34,7 @@ n_batches_to_run = 2 # The number of batches you want with successful attacks - 
 max_batches = 5 # The number of batches to run
 epsilons = 0.01
 plot = True
-evaluate_model = False # set to False if you know how good this model is and only want to run attacks
+evaluate_model = True # set to False if you know how good this model is and only want to run attacks
 
 ### Attacks ###
 
