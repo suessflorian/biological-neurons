@@ -347,7 +347,7 @@ class Frankenstein(nn.Module):
     LeNet1 and 2 have different architectures
     '''
     def __init__(self, layer_sizes, device, spike_mode='SB', recurrent=False, num_steps=10, 
-                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, lenet_bias=1.):
     
         super().__init__()    
         self.num_steps = num_steps
@@ -367,11 +367,11 @@ class Frankenstein(nn.Module):
         self.pool = nn.MaxPool2d(kernel_size=2, stride=1)
         
         # Alphas control the weighting of the different branches on the final output
-        self.alpha = nn.Parameter(torch.tensor([0.]).to(device))
-        self.alpha2 = nn.Parameter(torch.tensor([0.]).to(device))
-        self.alpha3 = nn.Parameter(torch.tensor([0.]).to(device))
-        self.alpha4 = nn.Parameter(torch.tensor([0.]).to(device))
-        self.alpha5 = nn.Parameter(torch.tensor([0.]).to(device))
+        self.alpha = nn.Parameter(torch.tensor([1.]).to(device))
+        self.alpha2 = nn.Parameter(torch.tensor([1. * lenet_bias]).to(device))
+        self.alpha3 = nn.Parameter(torch.tensor([1.]).to(device))
+        self.alpha4 = nn.Parameter(torch.tensor([1. * lenet_bias]).to(device))
+        self.alpha5 = nn.Parameter(torch.tensor([1. * lenet_bias]).to(device))
         
         # These are the layer sizes for the ParaLIF model learning from the first LeNet's representations
         new_layer_sizes = (84, 256, 512, 128, 32, 10)
@@ -486,11 +486,11 @@ class Frankenstein(nn.Module):
         
         # return (self.alpha * x + self.alpha2 * x2 + self.alpha3 * x3).softmax(dim=1)
         return (
-            self.alpha * x +
-            self.alpha2 * x2 + 
-            self.alpha3 * x3 + 
-            self.alpha4 * x4 + 
-            self.alpha5 * x5
+            self.alpha * x # ParaLIF
+            + self.alpha2 * x2 # LeNet1
+            + self.alpha3 * x3 # ParaLIF on LeNet representations
+            + self.alpha4 * x4 # LeNet2
+            + self.alpha5 * x5 # LeNet3
             ).softmax(dim=1)
         
     
