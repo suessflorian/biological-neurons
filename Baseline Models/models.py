@@ -415,6 +415,9 @@ class Frankenstein(nn.Module):
         self.lenet3_bn4 = nn.BatchNorm1d(84)
         self.lenet3_fc3 = nn.Linear(84, 10)
         
+        
+        self.output = nn.Linear(5*10, 10)
+        self.output_bn = nn.BatchNorm1d(10)
     
     def forward(self, original_images):
         # # EXPECTATION PART
@@ -482,6 +485,12 @@ class Frankenstein(nn.Module):
         x5 = self.lenet3_bn4(self.lenet3_fc2(x5))        
         x5 = F.relu(x5)
         x5 = self.lenet3_fc3(x5)
+        
+        
+        # final = torch.cat((x, x2, x3, x4, x5), dim=1)
+        # final = F.relu(self.output_bn(self.output(final)))
+        # return final.softmax(dim=1)
+               
         
         
         # return (self.alpha * x + self.alpha2 * x2 + self.alpha3 * x3).softmax(dim=1)
