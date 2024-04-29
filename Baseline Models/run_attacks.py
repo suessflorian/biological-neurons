@@ -5,6 +5,7 @@ from scripts import test_model
 from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein
 from attacks import foolbox_attack
 import foolbox as fb
+import numba
 
 ### GPU doesn't work for me properly - might be an easy fix though.
 
@@ -38,9 +39,10 @@ evaluate_model = False # set to False if you know how good this model is and onl
 
 ### Attacks ###
 
-# attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
-# attack = fb.attacks.DDNAttack()
 attack = fb.attacks.LinfFastGradientAttack()
+# attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
+# attack = fb.attacks.LInfFMNAttack()
+
 
 ### Model Loading ###
 
@@ -48,19 +50,21 @@ attack = fb.attacks.LinfFastGradientAttack()
 # model_name = 'SimpleParaLIF'
 # n_epochs = 5
 
-dataset = 'mnist'
-model_name = 'SimpleSNN'
-n_epochs = 5
+dataset = 'fashion'
+model_name = 'LeNet5'
+n_epochs = 20
 
 
 ############################## Model ##############################
 
-model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
+# model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
-# model = LeNet5_MNIST()
+model = LeNet5_MNIST()
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
-# model = testParaLIF(3*32*32, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
+# model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = GeneralParaLIF(layer_sizes=(3*32*32, 6144, 512, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
+# model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 
 
 
