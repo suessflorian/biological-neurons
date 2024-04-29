@@ -9,22 +9,19 @@ import numba
 
 ### GPU doesn't work for me properly - might be an easy fix though.
 
-# device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
-
-
-
 ############################## Hyperparameters ##############################
 
 batch_size = 16
 
 ### LIF/ParaLIF Hyperparameters - Required for initialisation ###
 
-num_steps = 20
+num_steps = 30
 tau_mem = 0.02
 tau_syn = 0.02
 decay_rate = 0.
-spike_mode = 'SB'
+spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT', 'GS']
 
 
 
@@ -39,9 +36,9 @@ evaluate_model = False # set to False if you know how good this model is and onl
 
 ### Attacks ###
 
-attack = fb.attacks.LinfFastGradientAttack()
+# attack = fb.attacks.LinfFastGradientAttack()
 # attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
-# attack = fb.attacks.LInfFMNAttack()
+attack = fb.attacks.LInfFMNAttack()
 
 
 ### Model Loading ###
@@ -51,16 +48,16 @@ attack = fb.attacks.LinfFastGradientAttack()
 # n_epochs = 5
 
 dataset = 'fashion'
-model_name = 'LeNet5'
-n_epochs = 20
+model_name = 'SimpleSNN'
+n_epochs = 100
 
 
 ############################## Model ##############################
 
-# model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
+model = SimpleSNN(28*28, num_steps=num_steps) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
-model = LeNet5_MNIST()
+# model = LeNet5_MNIST()
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 6144, 512, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
@@ -81,7 +78,7 @@ model_name = (dataset + '-10' if dataset == 'cifar' else dataset).upper() + '-' 
 
 ### Loading Model ###
 try:
-    state_dict = torch.load('Baseline Models/models/' + model_name)
+    state_dict = torch.load('Baseline Models/models/' + model_name, map_location=device)
     if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN):
         state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}  # Exclude memory states from loading
         model.load_state_dict(state_dict, strict=False)
@@ -133,7 +130,8 @@ for i, (images, labels) in enumerate(loader):
                                                                                             images=images, 
                                                                                             labels=labels, 
                                                                                             attack=attack, 
-                                                                                            epsilons=epsilons)
+                                                                                            epsilons=epsilons,
+                                                                                            device=device)
     if i == max_batches: 
         break
     if raw_attack is None: # no attack found
@@ -144,7 +142,9 @@ for i, (images, labels) in enumerate(loader):
     
     successful_attack_indices = (correct_pre_attack & ~correct_post_attack).view(-1)
     n_successful_attacks = successful_attack_indices.sum().item()
-    print(f'Batch: [{i}/{max_batches if max_batches != float('Inf') else len(loader)}], Successful Attacks: [{n_successful_attacks}/{batch_size}]')
+    print(f'Batch: [{i}/{max_batches if max_batches != float('Inf') else len(loader)}], ' 
+          + f'Successful Attacks: [{n_successful_attacks}/{correct_pre_attack.sum().item()}],'
+          + f'Batch Model Accuracy: [{correct_pre_attack.sum().item()}/{len(labels)}]')
     
     n_total_correct += correct_pre_attack.sum().item()
     
@@ -182,11 +182,11 @@ else:
 ############################## Plotting ##############################
 
 for index in range(len(original_images)):
-    plot_attack(original_images, 
-                perturbed_images, 
-                original_labels, 
-                original_predictions, 
-                perturbed_predictions, 
+    plot_attack(original_images.cpu(), 
+                perturbed_images.cpu(), 
+                original_labels.cpu(), 
+                original_predictions.cpu(), 
+                perturbed_predictions.cpu(), 
                 index=index, 
                 dataset=model_name.split('-')[0].lower())
 

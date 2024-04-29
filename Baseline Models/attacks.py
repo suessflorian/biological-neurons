@@ -14,11 +14,11 @@ def fgsm_attack(model, loss_fn, images, labels, epsilon):
     output = model(perturbed_image)
     return perturbed_image, output.argmax(dim = -1)
 
-def foolbox_attack(model, images, labels, attack, epsilons):
+def foolbox_attack(model, images, labels, attack, epsilons, device):
     # raise NotImplementedError('Function "foolbox_attack" is not finished.')
     model.eval()
     # Attack on a single batch
-    fmodel = fb.PyTorchModel(model, bounds=(0,1))
+    fmodel = fb.PyTorchModel(model, bounds=(0,1), device=device)
     # try:
     raw_attack, perturbed_image, is_adv = attack(fmodel, images, labels, epsilons=epsilons)
     with torch.no_grad():
@@ -175,28 +175,38 @@ def hopskipjumpattack(orig_pt,
 
     return dest_pt
 
-def hsja_attack(model, loader, device):
-    '''
-    '''
+def hsja_attack(model, images, labels, loader, device):
+    adv_images, target_labels = [], []
     
-    ori_img, ori_label = next(iter(loader))
-    iterator = iter(loader)
-    target_img, target_label = next(iterator)
+    for i in range(len(labels)):
+        image = images[i].unsqueeze(0)
+        label = labels[i]
+        
+        print(image.shape)
+        print(label)
+        
+        ori_img, ori_label = image, label
+        iterator = iter(loader)
+        target_imgs, target_labels = next(iterator)
+        target_img, target_label = target_imgs[0], target_labels[0]
 
-    ori_img, ori_label = ori_img.to(device), ori_label.to(device)
-    target_img, target_label = target_img.to(device), target_label.to(device)
-
-
-
-    while (ori_label == target_label or torch.argmax(model(target_img)) != target_label):
-        target_img, target_label = next(iterator)
         ori_img, ori_label = ori_img.to(device), ori_label.to(device)
         target_img, target_label = target_img.to(device), target_label.to(device)
 
-    adv_img = hopskipjumpattack(ori_img, model, dest_pt = target_img, target_label = target_label)
-    # print('original label:', ori_label)
-    # print('target label:', target_label)
-    # print(torch.argmax(model(target_img)) == target_label)
-    # print(indicator_function(model, target_img, target_label))
-    # print('attack label:', torch.argmax(model(adv_img)))
-    return adv_img, target_label
+
+        while (ori_label == target_label or torch.argmax(model(target_img)) != target_label):
+            target_imgs, target_labels = next(iterator)
+            target_img, target_label = target_imgs[0], target_labels[0]
+            ori_img, ori_label = ori_img.to(device), ori_label.to(device)
+            target_img, target_label = target_img.to(device), target_label.to(device)
+
+        adv_img = hopskipjumpattack(ori_img, model, dest_pt = target_img, target_label = target_label)
+        
+        adv_images.append(adv_img)
+        target_label.append(target_label)
+        # print('original label:', ori_label)
+        # print('target label:', target_label)
+        # print(torch.argmax(model(target_img)) == target_label)
+        # print(indicator_function(model, target_img, target_label))
+        # print('attack label:', torch.argmax(model(adv_img)))
+    return torch.cat(adv_images, dim=0), torch.cat(target_label, dim=0)

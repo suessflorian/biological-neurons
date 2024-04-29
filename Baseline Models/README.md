@@ -41,9 +41,9 @@ MNIST-Frankenstein-1-epochs.pt <- (97.92% test) [lr=0.001, optim=adamax, num_ste
 MNIST-Frankenstein-2-epochs.pt <- (98.65% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
 MNIST-Frankenstein-3-epochs.pt <- (98.93% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB] *** Baseline ***
 
-FASHION-Frankenstein-5-epochs.pt <- (89.11% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
+FASHION-Frankenstein-5-epochs.pt <- (89.11% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB] *** Baseline ***
 FASHION-Frankenstein-10-epochs.pt <- (88.67% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
-FASHION-Frankenstein-20-epochs.pt <- (89.9% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB] *** Baseline ***
+FASHION-Frankenstein-20-epochs.pt <- (89.9% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
 
 
 
