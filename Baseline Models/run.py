@@ -13,7 +13,7 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 
 batch_size = 256
 learning_rate = 0.001 # use 0.001 for ParaLIF
-n_epochs = 20
+n_epochs = 10
 
 # optimizer = torch.optim.SGD # Best for SimpleSNN
 # optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
@@ -22,7 +22,7 @@ optimizer = torch.optim.Adamax # Best for ParaLIF
 
 ### LIF/ParaLIF Hyperparameters ###
 
-num_steps = 20
+num_steps = 30
 tau_mem = 0.02
 tau_syn = 0.02
 decay_rate = 0.
@@ -39,15 +39,15 @@ plot = True
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 1024, 512, 256, 128, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 6144, 512, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
-model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
+# model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 
-load_name = None#'FASHION-Frankenstein-10-epochs' # set to None if loading not required
-save_name = None#'FASHION-Frankenstein-20-epochs' # set to None if saving not required
+load_name = None #'MNIST-Frankenstein-1-epochs' # set to None if loading not required
+save_name = 'FASHION-SimpleParaLIF-10-epochs' # set to None if saving not required
 
 
 
@@ -76,17 +76,17 @@ test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False,
 model = model.to(device)
 
 if load_name:
-    try:
-        state_dict = torch.load('Baseline Models/models/' + load_name + '.pt')
-        if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN):
-            state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}  # Exclude memory states from loading
-            model.load_state_dict(state_dict, strict=False)
-        else:
-            model.load_state_dict(state_dict)
-    except RuntimeError:
-        raise RuntimeError('Ask Peter for help with loading SNNTorch models.')
-    except:
-        print('Model Not Found. Using Untrained Model.')
+    # try:
+    state_dict = torch.load('Baseline Models/models/' + load_name + '.pt', map_location=device)
+    if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN):
+        state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}  # Exclude memory states from loading
+        model.load_state_dict(state_dict, strict=False)
+    else:
+        model.load_state_dict(state_dict)
+    # except RuntimeError:
+    #     raise RuntimeError('Ask Peter for help with loading SNNTorch models.')
+    # except:
+    #     print('Model Not Found. Using Untrained Model.')
 
 optimizer = optimizer(model.parameters(), lr=learning_rate)
 
