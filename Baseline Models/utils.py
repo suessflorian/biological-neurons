@@ -364,3 +364,4 @@ def rate_conv(data):
     spike_data = Sample.apply(clipped_data)
 
     return spike_data
+
