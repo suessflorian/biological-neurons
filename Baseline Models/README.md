@@ -29,11 +29,33 @@ CIFAR-10-LargerSNN-50-epochs.pt <- (44.02% test) [lr=0.01, optim=sgd, num_steps=
 
 
 
-************ ParaLIF Models ************ (These are the ones in main - see Matt's branch for the ones whose results are in canva)
+************ ParaLIF Models ************ (These are the ones in main)
 MNIST-SimpleParaLIF-5-epochs.pt <- (97.13% test) [lr=0.001, optim=adam, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB] *** Baseline ***
 
 FASHION-SimpleParaLIF-5-epochs.pt <- (85.44% test) [lr=0.001, optim=adam, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
 FASHION-SimpleParaLIF-10-epochs.pt <- (86.67% test) [lr=0.001, optim=adamax, num_steps=30, tau_mem=tau_syn=0.02, spike_mode=SB] *** Baseline ***
+
+
+************ Frankenstein Models ************ (layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), alphas=1, no expectation)
+MNIST-Frankenstein-1-epochs.pt <- (97.92% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
+MNIST-Frankenstein-2-epochs.pt <- (98.65% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
+MNIST-Frankenstein-3-epochs.pt <- (98.93% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB] *** Baseline ***
+
+FASHION-Frankenstein-5-epochs.pt <- (89.11% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
+FASHION-Frankenstein-10-epochs.pt <- (88.67% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
+FASHION-Frankenstein-20-epochs.pt <- (89.9% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB] *** Baseline ***
+
+
+
+
+
+
+
+
+
+*************************************************************************************
+************************************ EXPERIMENTS ************************************
+*************************************************************************************
 
 
 ***  ParaLIF Experiments *** 

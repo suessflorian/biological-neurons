@@ -12,12 +12,12 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 ##### Hyperparameters #####
 
 batch_size = 256
-learning_rate = 0.01 # use 0.001 for ParaLIF
-n_epochs = 20
+learning_rate = 0.001 # use 0.001 for ParaLIF
+n_epochs = 10
 
 # optimizer = torch.optim.SGD # Best for SimpleSNN
-optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
-# optimizer = torch.optim.Adamax # Best for ParaLIF
+# optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
+optimizer = torch.optim.Adamax # Best for ParaLIF
 
 
 ### LIF/ParaLIF Hyperparameters ###
@@ -32,22 +32,22 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 ##### Options #####
 
 dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
-train = False # Set to False if model training is not required (i.e. you only want to evaluate a model)
+train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
 plot = True
 
 # model = SimpleSNN(28*28, num_steps=30) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
-model = LeNet5_MNIST()
+# model = LeNet5_MNIST()
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 1024, 512, 256, 128, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 6144, 512, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
-# model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
+model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 
-load_name = 'FASHION-LeNet5-20-epochs' # set to None if loading not required
-save_name = None #'CIFAR-10-GeneralParaLIF03-5-epochs' # set to None if saving not required
+load_name = 'FASHION-Frankenstein-10-epochs' # set to None if loading not required
+save_name = 'FASHION-Frankenstein-20-epochs' # set to None if saving not required
 
 
 

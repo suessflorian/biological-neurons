@@ -2,7 +2,7 @@ import torch
 import torchvision
 from utils import load_data, plot_attack, printf
 from scripts import test_model
-from models import SimpleParaLif, SimpleSNN, LeNet5_MNIST, LargerSNN, LeNet5_CIFAR
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein
 from attacks import foolbox_attack
 import foolbox as fb
 
@@ -39,7 +39,6 @@ evaluate_model = False # set to False if you know how good this model is and onl
 ### Attacks ###
 
 # attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
-# attack = fb.attacks.BoundaryAttack()
 # attack = fb.attacks.DDNAttack()
 attack = fb.attacks.LinfFastGradientAttack()
 
