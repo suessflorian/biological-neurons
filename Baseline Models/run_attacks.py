@@ -30,8 +30,8 @@ spike_mode = 'SB'
 ############################## Options ##############################
 
 use_train_data = False # Training data is used to generate attacks if True, testing data otherwise
-n_successful_batches = 2 # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
-max_batches = 10 # The number of batches to run
+n_successful_batches = float('Inf') # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
+max_batches = float('Inf') # The number of batches to run
 epsilons = 0.01
 plot = True
 evaluate_model = False # set to False if you know how good this model is and only want to run attacks
