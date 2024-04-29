@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+import snntorch as snn
 from utils import StochasticStraightThrough, GumbelSoftmax, SurrGradSpike, SpikingFunction
 import numpy as np
 
@@ -181,3 +182,122 @@ class ParaLIF(Base):
     def extra_repr(self):
         return f"spike_mode={self.spike_mode}, recurrent={self.recurrent}, fire={self.fire}, alpha={self.alpha:.2f}, beta={self.beta:.2f}"
 
+class ConvBase(torch.nn.Module):
+    def __init__(self, input_size, kernel, stride, padding,
+                device, fire, tau_mem, tau_syn, time_step):
+        super(ConvBase, self).__init__()
+        self.input_size = input_size
+        self.kernel = kernel
+        self.stride = stride
+        self.padding = padding
+        self.device = device
+        self.fire = fire
+
+        # Neuron time constants
+        self.alpha = float(np.exp(-time_step/tau_syn))
+        self.beta = float(np.exp(-time_step/tau_mem))
+
+        # Convolutional Layer
+        self.conv = torch.nn.Conv2d(self.input_size, self.input_size, kernel_size=self.kernel, stride=self.stride, 
+                                  padding = self.padding, device=self.device)
+        # Initializing weights
+        torch.nn.init.kaiming_uniform_(self.conv.weight, a=0, mode='fan_in', nonlinearity='linear')
+        torch.nn.init.zeros_(self.conv.bias)
+
+class ConvParaLIF(torch.nn.Module):
+    """
+    Class for implementing a Parallelizable Leaky Integrate-and-Fire (ParaLIF) neuron model
+
+    Parameters:
+    - input_size (int): The number of expected features in the input
+    - hidden_size (int): The number of neurons on the layer
+    - device (torch.device): device to use for tensor computations, such as 'cpu' or 'cuda'
+    - spike_mode (str): "GS", "SB", "TRB", "D", "SD", "TD", "TRD", "T", "ST", "TT" or "TRT"
+    - recurrent (bool, optional): flag to determine if the neurons should be recurrent (default: False)
+    - fire (bool, optional): flag to determine if the neurons should fire spikes or not (default: True)
+    - tau_mem (float, optional): time constant for the membrane potential (default: 1e-3)
+    - tau_syn (float, optional): time constant for the synaptic potential (default: 1e-3)
+    - time_step (float, optional): step size for updating the LIF model (default: 1e-3)
+    - debug (bool, optional): flag to turn on/off debugging mode (default: False)
+    """
+	
+    def __init__(self, in_channel, kernel, stride, padding, device, spike_mode, 
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super(ConvParaLIF, self).__init__()
+        self.in_channel = in_channel
+        self.kernel = kernel
+        self.stride = stride
+        self.padding = padding
+        self.device = device
+        self.fire = fire
+
+        # Neuron time constants
+        self.alpha = float(np.exp(-time_step/tau_syn))
+        self.beta = float(np.exp(-time_step/tau_mem))
+
+        # Convolutional Layer
+        self.conv = torch.nn.Conv2d(self.in_channel, self.in_channel, kernel_size=self.kernel, stride=self.stride, 
+                                  padding = self.padding, device=self.device)
+        # Initializing weights
+        torch.nn.init.kaiming_uniform_(self.conv.weight, a=0, mode='fan_in', nonlinearity='linear')
+        torch.nn.init.zeros_(self.conv.bias)
+
+        # Set the spiking function
+        self.spike_mode = spike_mode
+        self.spike_fn = SpikingFunction(self.device, self.spike_mode)
+        
+        self.nb_steps = None
+        
+
+    def compute_params_fft(self):
+        """
+        Compute the FFT of the leakage parameters for parallel Leaky Integration
+
+        Returns:
+        fft_l_k: Product of FFT of parameters l and k
+        """
+        if self.nb_steps is None: return None
+
+        l = torch.pow(self.alpha,torch.arange(self.nb_steps,device=self.device))
+        k = torch.pow(self.beta,torch.arange(self.nb_steps,device=self.device))*(1-self.beta)
+        fft_l = torch.fft.rfft(l, n=2*self.nb_steps).unsqueeze(1)
+        fft_k = torch.fft.rfft(k, n=2*self.nb_steps).unsqueeze(1)
+        return fft_l*fft_k
+
+
+    def forward(self, inputs, parallel=True):
+        """
+        Perform forward pass of the network
+
+        Parameters:
+        - inputs (tensor): Input tensor with shape (batch_size, numsteps, H, W)
+        - parallel (bool, optional): If 'True' (default) the parallel forward is used and if 'False' the sequential forward is used
+
+        Returns:
+        - Return membrane potential tensor with shape (batch_size, nb_steps, hidden_size) if 'fire' is False
+        - Return spiking tensor with shape (batch_size, nb_steps, hidden_size) if 'fire' is True
+        - Return the tuple (spiking tensor, membrane potential tensor) if 'debug' is True and 'fire' is True
+        """
+        X = self.conv(inputs)
+        conv_shape = X.shape
+        X = X.view(X.shape[0], X.shape[1], -1)
+        batch_size, nb_steps,_ = X.shape
+    
+        # Compute FFT params if nb_steps has changed
+        if self.nb_steps!=nb_steps: 
+            self.nb_steps = nb_steps
+            self.fft_l_k = self.compute_params_fft()
+
+        # Perform parallel leaky integration - Equation (15)
+        fft_X = torch.fft.rfft(X, n=2*nb_steps, dim=1)
+        mem_pot_final = torch.fft.irfft(fft_X*self.fft_l_k, n=2*nb_steps, dim=1)[:,:nb_steps:,]
+    
+        if self.fire:
+        	# Perform firing - Equation (24)
+            spikes = self.spike_fn(mem_pot_final)
+            return mem_pot_final.view(conv_shape), spikes.view(conv_shape)
+        
+        return mem_pot_final.view(conv_shape)
+    
+    def extra_repr(self):
+        return f"spike_mode={self.spike_mode}, recurrent={self.recurrent}, fire={self.fire}, alpha={self.alpha:.2f}, beta={self.beta:.2f}"
