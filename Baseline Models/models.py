@@ -2,9 +2,13 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import snntorch as snn
-from neurons import ParaLIF
+from neurons import ParaLIF, ConvParaLIF
 from utils import rate
 from snntorch import utils as utls
+
+import matplotlib.pyplot as plt
+import snntorch.spikeplot as splt
+from IPython.display import HTML
 
 class LeNet5_CIFAR(nn.Module):
     def __init__(self):
@@ -186,11 +190,11 @@ class SimpleParaLif(nn.Module):
         self.num_steps = num_steps
 
         # Set the spiking function
-        self.paralif1 = ParaLIF(input_size, 2**9, device, spike_mode, recurrent, fire, tau_mem,
+        self.paralif1 = ParaLIF(input_size, 2**9, device, spike_mode, recurrent, False, tau_mem,
                                 tau_syn, time_step)
-        self.paralif2 = ParaLIF(2**9, 2**8, device, spike_mode, recurrent, fire, tau_mem,
+        self.paralif2 = ParaLIF(2**9, 2**8, device, spike_mode, recurrent, False, tau_mem,
                                 tau_syn, time_step)
-        self.paralif3 = ParaLIF(2**8, 2**7, device, spike_mode, recurrent, fire, tau_mem,
+        self.paralif3 = ParaLIF(2**8, 2**7, device, spike_mode, recurrent, False, tau_mem,
                                 tau_syn, time_step)
         self.paralif4 = ParaLIF(2**7, 10, device, spike_mode, recurrent, fire, tau_mem,
                                 tau_syn, time_step)
@@ -206,6 +210,267 @@ class SimpleParaLif(nn.Module):
         x = self.paralif4(x)
         x = torch.mean(x,1)
         return x.softmax(dim=1)            
+    
+class SimpleConvPara(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        self.device = device
+        
+        self.convPara1 = ConvParaLIF(in_channel=num_steps, kernel = 1, stride = 1, padding = 0, 
+                                     device=device, spike_mode=spike_mode, fire=True,
+                                     tau_mem=tau_mem, tau_syn=tau_syn, time_step=time_step)
+        self.pool1 = nn.AvgPool2d(kernel_size=2, stride=2, padding=0)
+        self.convPara2 = ConvParaLIF(in_channel=num_steps, kernel = 1, stride = 1, padding = 0, 
+                                     device=device, spike_mode=spike_mode, fire=True,
+                                     tau_mem=tau_mem, tau_syn=tau_syn, time_step=time_step)
+        self.convPara3 = ConvParaLIF(in_channel=num_steps, kernel = 1, stride = 1, padding = 0, 
+                                     device=device, spike_mode=spike_mode, fire=True,
+                                     tau_mem=tau_mem, tau_syn=tau_syn, time_step=time_step)
+        self.pool2 = nn.AvgPool2d(kernel_size=2, stride=2, padding=0)
+        self.thresh = nn.Threshold(0.75, 0)
+        self.batchn = nn.BatchNorm2d(num_steps)
+        self.batchn1 = nn.BatchNorm1d(num_steps)
+        self.paralif1 = ParaLIF(input_size, 240, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step) # or 4x4
+        self.paralif2 = ParaLIF(240, 84, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        batch, channel, height, width = images.size()
+        final_spike_train = torch.zeros((batch, self.num_steps, height, width)).to(device=self.device)
+        each_step = self.num_steps//channel
+
+        for i in range(channel):
+            flattened = images[:,i,:,:].view(batch, -1)  # (batch, colour_channel*width*height)
+            spike_train = rate(flattened, num_steps=each_step)    
+            spike_train = torch.swapaxes(spike_train, 0, 1)
+            spike_train = spike_train.view(batch, -1, height, width)
+            final_spike_train[:,i*each_step:(i+1)*each_step,:,:] = spike_train
+
+        '''animation = final_spike_train[0]
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation, fig, ax)
+        plt.show()'''
+        x = self.batchn(self.convPara1(final_spike_train)[1])
+        x = torch.add(x, final_spike_train)
+        #x = self.pool(x)
+        #x = self.thresh(x)
+
+        '''animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0], fig, ax)
+        plt.show()'''
+
+        temp_x = self.batchn(self.convPara2(x)[1])
+        x = torch.add(temp_x, x)
+        x = self.pool1(x)
+        x = self.thresh(x)
+        #x[x>0] = 1
+
+        temp_x = self.batchn(self.convPara3(x)[1])
+        x = torch.add(temp_x, x)
+        x = self.pool2(x)
+        x = self.thresh(x)
+        #x[x>0] = 1
+
+        '''print(x.shape)
+        animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0], fig, ax)
+        plt.show()'''
+        
+        x = x.view(batch, self.num_steps, -1)
+        x = self.batchn1(self.paralif1(x))
+        x = self.batchn1(self.paralif2(x))
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x.softmax(dim=1)    
+
+class ConvAndParaMnist(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+
+        self.paralif1 = ParaLIF(16*4*4, 120, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step) # or 4x4
+        self.paralif2 = ParaLIF(120, 84, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.conv1(images))
+        x = self.pool(F.relu(x))
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        '''animation = spike_train[0]
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation, fig, ax)
+        plt.show()'''
+        '''animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0], fig, ax)
+        plt.show()'''
+
+        '''animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
+        plt.show()'''
+
+        x = self.paralif1(x)
+        x = self.paralif2(x)
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x.softmax(dim=1)
+    
+class ConvAndParaFashion(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.paralif1 = ParaLIF(40*5*5, 120, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step) # or 4x4
+        self.paralif2 = ParaLIF(120, 84, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        '''animation = spike_train[0]
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation, fig, ax)
+        plt.show()'''
+        '''animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0], fig, ax)
+        plt.show()'''
+
+        '''animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
+        plt.show()'''
+        #print(x.shape)
+        x = self.paralif1(x)
+        x = self.paralif2(x)
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x.softmax(dim=1)
+
+class ConvAndParaCifar(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+
+        # VGG9
+        self.cnn11 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.cnn12 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.avgpool1 = nn.AvgPool2d(kernel_size=2)
+        self.bn1 = nn.BatchNorm2d(64)
+
+        self.cnn21 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False)
+        self.cnn22 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False)
+        self.avgpool2 = nn.AvgPool2d(kernel_size=2)
+        self.bn2 = nn.BatchNorm2d(128)
+
+        self.cnn31 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
+        self.cnn32 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
+        self.cnn33 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
+        self.avgpool3 = nn.AvgPool2d(kernel_size=2)
+        self.bn3 = nn.BatchNorm2d(256)
+
+        self.fc1 = nn.Linear(256*4*4, 1024, device=device)
+        self.fc2 = nn.Linear(1024, 10, device=device)
+
+        self.paralif1 = ParaLIF(256*4*4, 1024, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step) # or 4x4
+        self.paralif2 = ParaLIF(1024, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.cnn11(images))
+        x = self.bn1(self.cnn12(x))
+        x = self.avgpool1(F.relu(x))
+
+        x = self.bn2(self.cnn21(x))
+        x = self.bn2(self.cnn22(x))
+        x = self.avgpool2(F.relu(x))
+
+        x = self.bn3(self.cnn31(x))
+        x = self.bn3(self.cnn32(x))
+        x = self.bn3(self.cnn33(x))
+        x = self.avgpool3(F.relu(x))
+
+        '''x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        return x'''
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        '''animation = spike_train[0]
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation, fig, ax)
+        plt.show()'''
+        '''animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0], fig, ax)
+        plt.show()'''
+        '''animation = x.cpu().detach()
+        fig, ax = plt.subplots()
+        anim = splt.animator(animation[0], fig, ax)
+        plt.show()'''
+
+        x = self.paralif1(x)
+        x = self.paralif2(x)
+        x = torch.mean(x,1)
+        return x.softmax(dim=1)    
 
 class GeneralParaLIF(nn.Module):
     torch.manual_seed(1123)
