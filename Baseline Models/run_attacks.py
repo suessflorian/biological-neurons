@@ -10,7 +10,7 @@ import numba
 ### GPU doesn't work for me properly - might be an easy fix though.
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
-device = torch.device('cpu')
+# device = torch.device('cpu')
 ############################## Hyperparameters ##############################
 
 batch_size = 16
@@ -32,13 +32,13 @@ n_successful_batches = float('Inf') # The number of batches you want with succes
 max_batches = float('Inf') # The number of batches to run
 epsilons = 0.01
 plot = True
-evaluate_model = False # set to False if you know how good this model is and only want to run attacks
+evaluate_model = True # set to False if you know how good this model is and only want to run attacks
 
 ### Attacks ###
 
-# attack = fb.attacks.LinfFastGradientAttack()
+attack = fb.attacks.LinfFastGradientAttack()
 # attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
-attack = fb.attacks.LInfFMNAttack()
+# attack = fb.attacks.LInfFMNAttack()
 
 
 ### Model Loading ###
@@ -48,17 +48,17 @@ attack = fb.attacks.LInfFMNAttack()
 # n_epochs = 5
 
 dataset = 'fashion'
-model_name = 'SimpleSNN'
-n_epochs = 100
+model_name = 'SimpleParaLIF'
+n_epochs = 10
 
 
 ############################## Model ##############################
 
-model = SimpleSNN(28*28, num_steps=num_steps) # MNIST or FashionMNIST
+# model = SimpleSNN(28*28, num_steps=num_steps) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 6144, 512, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 # model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
