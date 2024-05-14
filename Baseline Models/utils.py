@@ -18,14 +18,25 @@ def load_data(dataset = "mnist",
               batch_size = 256, 
               transforms = torchvision.transforms.ToTensor(),
               download  = True):
+    '''
+    Returns the dataset and dataloader for the specified dataset.
+    
+    Supported datasets: [mnist, cifar, fashion, emnist, kmnist, svhn]
+    '''
     if dataset.lower() == 'mnist':
         dataset = torchvision.datasets.MNIST(path, train=train, transform=transforms, download=download)
     elif dataset.lower() == 'fashion':
         dataset = torchvision.datasets.FashionMNIST(path, train=train, transform=transforms, download=download)
     elif dataset.lower() == 'cifar':
         dataset = torchvision.datasets.CIFAR10(path, train=train, transform=transforms, download=download)
+    elif dataset.lower() == 'emnist':
+        dataset = torchvision.datasets.EMNIST(path, train=train, transform=transforms, download=download, split='balanced')
+    elif dataset.lower() == 'kmnist':
+        dataset = torchvision.datasets.KMNIST(path, train=train, transform=transforms, download=download)
+    elif dataset.lower() == 'svhn':
+        dataset = torchvision.datasets.SVHN(path + '/SVHN', split='train' if train else 'test', transform=transforms, download=download)
     else:
-        raise ValueError('Invalid dataset. Options: [mnist, cifar, fashion]')
+        raise ValueError('Invalid dataset. Options: [mnist, cifar, fashion, emnist, kmnist, svhn]')
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataset, loader
 
