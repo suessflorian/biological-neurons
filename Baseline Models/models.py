@@ -64,6 +64,33 @@ class LeNet5_MNIST(nn.Module):
         x = self.fc3(x)
         return x
     
+class LeNet5_Flexible(nn.Module):
+    def __init__(self, n_classes):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.fc1 = nn.Linear(16 * 4 * 4, 120) 
+        self.bn3 = nn.BatchNorm1d(120)
+        self.fc2 = nn.Linear(120, 84)
+        self.bn4 = nn.BatchNorm1d(84)
+        self.fc3 = nn.Linear(84, n_classes)
+
+    def forward(self, x):
+        x = self.bn1(self.conv1(x))
+        x = self.pool(F.relu(x))
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+        x = x.view(-1, 16 * 4 * 4)  # Flatten the tensor for the fully connected layer
+        x = self.bn3(self.fc1(x))
+        x = F.relu(x)
+        x = self.bn4(self.fc2(x))
+        x = F.relu(x)
+        x = self.fc3(x)
+        return x
+    
 
 class SimpleSNN(nn.Module):
     # Slightly modified Florian's implementation
@@ -88,6 +115,58 @@ class SimpleSNN(nn.Module):
         )
 
         self.fc4 = nn.Linear(2**7, 10)
+        
+        self.num_steps = num_steps
+
+    def forward(self, images):  # images (batch, colour_channel, height, width)
+        utls.reset(self.lif1)
+        utls.reset(self.lif2)
+        utls.reset(self.lif3)
+        
+        mem1 = self.lif1.init_leaky()
+        mem2 = self.lif2.init_leaky()
+        mem3 = self.lif3.init_leaky()
+        
+        flattened = images.view(images.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)
+        output_spikes = []
+        for step in range(self.num_steps):
+            x = self.fc1(spike_train[step])
+            x, mem1 = self.lif1(x, mem1)
+            
+            x = self.fc2(x)
+            x, mem2 = self.lif2(x, mem2)
+            
+            x = self.fc3(x)
+            x, mem3 = self.lif3(x, mem3)
+
+            x = self.fc4(x)
+            output_spikes.append(x)
+        return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
+    
+class SimpleSNN_EMNIST(nn.Module):
+    # Slightly modified Florian's implementation
+    torch.manual_seed(0) #  deterministic weight initials for perceptrons 
+    def __init__(self, input_size, decay_rate=0.9, num_steps=10):
+        super(SimpleSNN, self).__init__()
+        
+        self.fc1 = nn.Linear(input_size, 2**9)
+        self.lif1 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        self.fc2 = nn.Linear(2**9, 2**8)
+        self.lif2 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        self.fc3 = nn.Linear(2**8, 2**7)
+        self.lif3 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+
+        self.fc4 = nn.Linear(2**7, 47)
         
         self.num_steps = num_steps
 

@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein, LeNet5_Flexible
 from scripts import train_model, test_model
 from utils import load_data
 import time
@@ -12,8 +12,8 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 ##### Hyperparameters #####
 
 batch_size = 256
-learning_rate = 0.001 # use 0.001 for ParaLIF
-n_epochs = 10
+learning_rate = 0.01 # use 0.001 for ParaLIF
+n_epochs = 20
 
 # optimizer = torch.optim.SGD # Best for SimpleSNN
 # optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
@@ -22,7 +22,7 @@ optimizer = torch.optim.Adamax # Best for ParaLIF
 
 ### LIF/ParaLIF Hyperparameters ###
 
-num_steps = 30
+num_steps = 20
 tau_mem = 0.02
 tau_syn = 0.02
 decay_rate = 0.
@@ -31,15 +31,17 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 ##### Options #####
 
-dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
+dataset = 'svhn' # [mnist, cifar, fashion, emnist, kmnist, svhn]
 train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
 plot = True
 
 # model = SimpleSNN(28*28, num_steps=30) # MNIST or FashionMNIST
-# model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
+model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = LeNet5_Flexible(n_classes=47) # EMNIST
+# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
+# model = GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 47), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # EMNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 1024, 512, 256, 128, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
@@ -47,7 +49,7 @@ model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num
 # model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 
 load_name = None #'MNIST-Frankenstein-1-epochs' # set to None if loading not required
-save_name = 'FASHION-SimpleParaLIF-10-epochs' # set to None if saving not required
+save_name = None #'FASHION-SimpleParaLIF-10-epochs' # set to None if saving not required
 
 
 
