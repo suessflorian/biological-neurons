@@ -31,15 +31,15 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 ##### Options #####
 
-dataset = 'emnist' # [mnist, cifar, fashion, emnist, kmnist, svhn]
+dataset = 'kmnist' # [mnist, cifar, fashion, emnist, kmnist, svhn]
 train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
 plot = True
 
 # model = SimpleSNN(28*28, num_steps=30) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 # model = LeNet5_CIFAR()
-# model = LeNet5_MNIST()
-model = LeNet5_Flexible(n_classes=47) # EMNIST
+model = LeNet5_MNIST()
+# model = LeNet5_Flexible(n_classes=47) # EMNIST
 # model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 47), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # EMNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
