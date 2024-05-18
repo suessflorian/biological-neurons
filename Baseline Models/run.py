@@ -112,6 +112,12 @@ if train:
         plt.legend(('Train', 'Test'))
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
+        model_name = model.__class__.__name__
+        if '_' in model_name:
+            model_name = model_name[:model_name.find('_')]
+        optimizer_name = optimizer.__class__.__name__
+        plt.title(f'{model_name} on {dataset.upper()}, ' +
+                  f'lr={learning_rate}, optim={optimizer_name}')
         plt.show()
 
 
