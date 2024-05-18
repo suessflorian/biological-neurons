@@ -2,9 +2,10 @@ Note: This does not display well on github. Download and open the file instead.
 
 ************ Standard models ************
 MNIST-LeNet5-3-epochs.pt <- (98.95% test accuracy)
+MNIST-LeNet5-30-epochs.pt <- (98.90% test accuracy)
 FASHION-LeNet5-20-epochs.pt <- (90.32% test accuracy)
 CIFAR-10-LeNet5-20-epochs.pt <- (64.24% test accuracy)
-
+FASHION-LeNet5-30-epochs.pt <- (90.51% test accuracy)
 
 
 
@@ -41,4 +42,18 @@ FASHION-SimpleParaLIF-10-epochs.pt <- (85.63% test) [lr=0.001, optim=adamax, num
 FASHION-SimpleParaLIF-20-epochs.pt <- (86.8% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
 FASHION-SimpleParaLIF-50-epochs.pt <- (87.52% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
 
+************ Conv + Paralif Experiments ************
+MNIST-ConvAndParaMnist-30-epochs.pt <- (98.46% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+MNIST-ConvAndParaMnist2-30-epochs.pt <- (98.86% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+MNIST-ConvAndParaMnist1-30-epochs.pt <- (98.91% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
 
+Fashion-ConvAndParaFashion-30-epochs.pt <- (89.56% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+Fashion-ConvAndParaFashion2-30-epochs.pt <- (89.96% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+Fashion-ConvAndParaFashion1-30-epochs.pt <- (90.50% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+
+************ Conv + Lif Experiments ************
+MNIST-ConvAndLifMnist-30-epochs.pt <- (98.95% test) [lr=0.01, optim=SGD, num_steps=30, decay_rate=0.9]
+MNIST-ConvAndLifMnist1-30-epochs.pt <- (98.77% test) [lr=0.01, optim=SGD, num_steps=30, decay_rate=0.9]
+
+Fashion-ConvAndLifFashion-30-epochs.pt <- (89.56% test) [lr=0.01, optim=adamax, num_steps=100, decay_rate=0.9]
+Fashion-ConvAndLifFashion1-30-epochs.pt <- (90.80 test) [lr=0.01, optim=adamax, num_steps=100, decay_rate=0.9]
