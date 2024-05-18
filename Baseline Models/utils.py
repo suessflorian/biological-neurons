@@ -74,6 +74,32 @@ def plot_attack(original_images,
     fig.suptitle(f'True: {true_label},\nPredicted: {predicted_label},\nAdversarial: {adversarial_prediction}')
     plt.tight_layout(); fig.subplots_adjust(top=1.1)
     plt.show()
+    
+def get_object_name(obj, neat = True):
+    '''
+    Returns the name of the object.
+    If neat = True, returns everything before a "_" symbol and neatens LIF and ParaLIF.
+    '''
+    name = obj.__class__.__name__
+    if neat:
+        if '_' in name:
+            name = name[:name.find('_')]
+        elif 'paralif' in name.lower():
+            name = 'ParaLIF'
+        elif 'lif' in name.lower():
+            name = 'LIF'
+    return name
+
+def is_leaky(model):
+    '''
+    Returns True if model has a "Leaky" neuron. 
+    False otherwise.
+    '''
+    for module in model.modules():
+        if get_object_name(module) == 'Leaky':
+            return True
+    return False
+    
 
 # WARNING: Implementation from: https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron
 # Sigmoid Bernoulli Spikes Generation
