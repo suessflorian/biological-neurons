@@ -87,7 +87,7 @@ def plot_attack(original_images,
     plt.tight_layout(); fig.subplots_adjust(top=1.1)
     plt.show()
     
-def get_object_name(obj, neat = True):
+def get_object_name(obj, neat = False):
     '''
     Returns the name of the object.
     If neat = True, returns everything before a "_" symbol and neatens LIF and ParaLIF.

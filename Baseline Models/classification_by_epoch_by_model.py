@@ -11,7 +11,7 @@ Warning: This script can take a long time to run.
 
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein, LeNet5_Flexible
+from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein, LeNet5_Flexible, GeneralSNN
 from scripts import train_model, test_model
 from utils import load_data, get_object_name, is_leaky
 import time
@@ -22,7 +22,7 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 ##### Configuration #####
 
 dataset = 'fashion'
-
+plot_params = True
 
 batch_size = 256
 n_epochs = 10
@@ -35,7 +35,7 @@ spike_mode = 'SB'
 
 models = [
     LeNet5_MNIST(),
-    SimpleSNN(input_size=28*28, num_steps=num_steps),
+    GeneralSNN(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
     GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 ]
 
@@ -108,12 +108,17 @@ for i in [0, 1]:
     
 axs[0].set_title('Train Accuracies')
 axs[1].set_title('Test Accuracies')
-    
-fig.suptitle(
-    f'Models: {[get_object_name(m, neat=True) for m in models]}\n' +
-    f'Optims: {[get_object_name(o, neat=True) for o in optimizers]}\n' +
-    f'lrs: {[lr for lr in learning_rates]}\n' +
-    f'Dataset: {dataset.upper()}'
-)
+
+if plot_params:
+    fig.suptitle(
+        f'Models: {[get_object_name(m, neat=True) for m in models]}\n' +
+        f'Optims: {[get_object_name(o, neat=True) for o in optimizers]}\n' +
+        f'lrs: {[lr for lr in learning_rates]}\n' +
+        f'Dataset: {dataset.upper()}'
+    )
+else:
+    fig.suptitle(
+        f'Dataset: {dataset.upper()}'
+    )
 
 plt.show()
