@@ -49,8 +49,13 @@ FASHION-Frankenstein-10-epochs.pt <- (88.67% test) [lr=0.001, optim=adamax, num_
 FASHION-Frankenstein-20-epochs.pt <- (89.9% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
 
 
+************************************************************************************
+********************************** SPECIAL USES ************************************
+************************************************************************************
 
-
+*** Model used in expectation_by_steps_by_model_trained.py *** 
+MNIST-GeneralParaLIF-5-epochs <- (96.21% test) [lr=0.001, optim=adamax]
+GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 47), device=device, spike_mode='SB', num_steps=20, tau_mem=0.02, tau_syn=0.02)
 
 
 
