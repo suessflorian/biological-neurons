@@ -40,6 +40,18 @@ def load_data(dataset = "mnist",
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataset, loader
 
+def load_model(model, model_name, device):
+    '''
+    Loads a model.
+    '''
+    state_dict = torch.load(model_name, map_location=device)
+    if is_leaky(model):
+        state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}  # Exclude memory states from loading
+        model.load_state_dict(state_dict, strict=False)
+    else:
+        model.load_state_dict(state_dict)
+    return model
+
 def plot_attack(original_images, 
                 perturbed_images, 
                 original_labels, 
@@ -86,7 +98,7 @@ def get_object_name(obj, neat = True):
             name = name[:name.find('_')]
         elif 'paralif' in name.lower():
             name = 'ParaLIF'
-        elif 'lif' in name.lower():
+        elif 'snn' in name.lower():
             name = 'LIF'
     return name
 
@@ -99,7 +111,12 @@ def is_leaky(model):
         if get_object_name(module) == 'Leaky':
             return True
     return False
-    
+
+def make_noisy(images, n_steps):
+    '''
+    Adds noise to the data by averaging a rate encoding.
+    '''
+    return rate(images, num_steps=n_steps).mean(dim=0)
 
 # WARNING: Implementation from: https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron
 # Sigmoid Bernoulli Spikes Generation

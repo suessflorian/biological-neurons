@@ -25,7 +25,7 @@ dataset = 'fashion'
 
 
 batch_size = 256
-n_epochs = 5
+n_epochs = 10
 
 num_steps = 20
 tau_mem = 0.02
@@ -36,7 +36,7 @@ spike_mode = 'SB'
 models = [
     LeNet5_MNIST(),
     SimpleSNN(input_size=28*28, num_steps=num_steps),
-    GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 47), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
+    GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 ]
 
 optimizers = [
@@ -80,7 +80,7 @@ all_results = []
 print('\n---------- Training ----------')
 start_time = time.time()
 for i, (model, optimizer, device) in enumerate(zip(models, optimizers, devices)):
-    print(f'\nTraining model: {get_object_name(model)}')
+    print(f'\nTraining model {i+1}: {get_object_name(model)}')
     model, results = train_model(model, 
                                 loader=train_loader, 
                                 optimizer=optimizer,
@@ -104,8 +104,10 @@ for result in all_results:
 for i in [0, 1]:
     axs[i].set_xlabel('Epochs')
     axs[i].set_ylabel('Accuracy')
-    axs[i].set_title('Test Accuracies')
-    axs[i].legend([get_object_name(m, neat=True) for m in models])
+    axs[i].legend([get_object_name(m, neat=True) for m in models], loc = 'lower right')
+    
+axs[0].set_title('Train Accuracies')
+axs[1].set_title('Test Accuracies')
     
 fig.suptitle(
     f'Models: {[get_object_name(m, neat=True) for m in models]}\n' +

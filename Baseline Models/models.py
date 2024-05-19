@@ -143,6 +143,37 @@ class SimpleSNN(nn.Module):
             x = self.fc4(x)
             output_spikes.append(x)
         return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
+
+class GeneralSNN(nn.Module):
+    def __init__(self, layer_sizes, decay_rate=0.9, num_steps=10):
+        super().__init__()
+        self.n_layers = len(layer_sizes) - 1
+        
+        for i, (l1, l2) in enumerate(zip(layer_sizes, layer_sizes[1:])):
+            self.add_module(f'fc{i}', nn.Linear(l1, l2))
+            if i < self.n_layers - 1:
+                self.add_module(f'lif{i}', snn.Leaky(beta=decay_rate, spike_grad=snn.surrogate.atan()))
+        
+        self.num_steps = num_steps
+        
+    def forward(self, images):
+        mems = []
+        for key in self._modules:
+            if 'lif' in key:
+                utls.reset(self._modules[key])
+                mems.append(self._modules[key].init_leaky())
+        
+        flattened = images.view(images.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)
+        output_spikes = []
+        for step in range(self.num_steps):
+            x = spike_train[step]
+            for i in range(self.n_layers - 1):
+                x = self._modules[f'fc{i}'](x)
+                x, mems[i] = self._modules[f'lif{i}'](x, mems[i])
+            x = self._modules[f'fc{i+1}'](x)
+            output_spikes.append(x)
+        return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
     
 class SimpleSNN_EMNIST(nn.Module):
     # Slightly modified Florian's implementation
