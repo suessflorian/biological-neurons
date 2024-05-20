@@ -1,3 +1,3 @@
 # (CS760) Project
 
-Yay
+Baseline models is where it's at

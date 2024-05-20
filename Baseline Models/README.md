@@ -2,9 +2,10 @@ Note: If this does not display well on github, download and open the file instea
 
 ************ Standard models ************
 MNIST-LeNet5-3-epochs.pt <- (98.95% test accuracy) *** Baseline ***
+MNIST-LeNet5-30-epochs.pt <- (98.90% test accuracy)
 FASHION-LeNet5-20-epochs.pt <- (90.32% test accuracy) *** Baseline ***
+FASHION-LeNet5-30-epochs.pt <- (90.51% test accuracy)
 CIFAR-10-LeNet5-20-epochs.pt <- (64.24% test accuracy)
-
 
 
 
@@ -46,8 +47,13 @@ FASHION-Frankenstein-10-epochs.pt <- (88.67% test) [lr=0.001, optim=adamax, num_
 FASHION-Frankenstein-20-epochs.pt <- (89.9% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
 
 
+************************************************************************************
+********************************** SPECIAL USES ************************************
+************************************************************************************
 
-
+*** Model used in expectation_by_steps_by_model_trained.py *** 
+MNIST-GeneralParaLIF-5-epochs <- (96.21% test) [lr=0.001, optim=adamax]
+GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 47), device=device, spike_mode='SB', num_steps=20, tau_mem=0.02, tau_syn=0.02)
 
 
 
@@ -63,7 +69,21 @@ FASHION-SimpleParaLIF-10-epochs.pt <- (85.63% test) [lr=0.001, optim=adamax, num
 FASHION-SimpleParaLIF-20-epochs.pt <- (86.8% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
 FASHION-SimpleParaLIF-50-epochs.pt <- (87.52% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
 
+************ Conv + Paralif Experiments ************
+MNIST-ConvAndParaMnist-30-epochs.pt <- (98.46% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+MNIST-ConvAndParaMnist2-30-epochs.pt <- (98.86% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+MNIST-ConvAndParaMnist1-30-epochs.pt <- (98.91% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
 
+Fashion-ConvAndParaFashion-30-epochs.pt <- (89.56% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+Fashion-ConvAndParaFashion2-30-epochs.pt <- (89.96% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+Fashion-ConvAndParaFashion1-30-epochs.pt <- (90.50% test) [lr=0.001, optim=adamax, num_steps=100, tau_mem=tau_syn=0.02, spike_mode=SB]
+
+************ Conv + Lif Experiments ************
+MNIST-ConvAndLifMnist-30-epochs.pt <- (98.95% test) [lr=0.01, optim=SGD, num_steps=30, decay_rate=0.9]
+MNIST-ConvAndLifMnist1-30-epochs.pt <- (98.77% test) [lr=0.01, optim=SGD, num_steps=30, decay_rate=0.9]
+
+Fashion-ConvAndLifFashion-30-epochs.pt <- (89.56% test) [lr=0.01, optim=adamax, num_steps=100, decay_rate=0.9]
+Fashion-ConvAndLifFashion1-30-epochs.pt <- (90.80 test) [lr=0.01, optim=adamax, num_steps=100, decay_rate=0.9]
 
 *** CIFAR where the layer_sizes = (3*32*32, 1024, 512, 256, 128, 64, 10) *** 
 CIFAR-10-GeneralParaLIF01-5-epochs.pt <- (27.24% test) [lr=0.001, optim=adamax, num_steps=20, tau_mem=tau_syn=0.02, spike_mode=SB]
