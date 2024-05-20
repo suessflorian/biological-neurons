@@ -1,13 +1,11 @@
 Note: If this does not display well on github, download and open the file instead.
 
 ************ Standard models ************
-MNIST-LeNet5-3-epochs.pt <- (98.95% test accuracy)
-MNIST-LeNet5-30-epochs.pt <- (98.90% test accuracy)
-FASHION-LeNet5-20-epochs.pt <- (90.32% test accuracy)
 MNIST-LeNet5-3-epochs.pt <- (98.95% test accuracy) *** Baseline ***
+MNIST-LeNet5-30-epochs.pt <- (98.90% test accuracy)
 FASHION-LeNet5-20-epochs.pt <- (90.32% test accuracy) *** Baseline ***
-CIFAR-10-LeNet5-20-epochs.pt <- (64.24% test accuracy)
 FASHION-LeNet5-30-epochs.pt <- (90.51% test accuracy)
+CIFAR-10-LeNet5-20-epochs.pt <- (64.24% test accuracy)
 
 
 

@@ -3,6 +3,7 @@ import torchvision
 import foolbox as fb
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+# from models import SimpleSNN, LargerSNN, GeneralSNN
 
 def printf(string):
     # function for printing stuff that gets removed from the output each iteration
@@ -30,7 +31,7 @@ def load_data(dataset = "mnist",
     elif dataset.lower() == 'cifar':
         dataset = torchvision.datasets.CIFAR10(path, train=train, transform=transforms, download=download)
     elif dataset.lower() == 'emnist':
-        dataset = torchvision.datasets.EMNIST(path, train=train, transform=transforms, download=download, split='balanced')
+        dataset = torchvision.datasets.EMNIST(path, train=train, transform=transforms, download=download, split='letters')
     elif dataset.lower() == 'kmnist':
         dataset = torchvision.datasets.KMNIST(path, train=train, transform=transforms, download=download)
     elif dataset.lower() == 'svhn':
@@ -40,11 +41,25 @@ def load_data(dataset = "mnist",
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataset, loader
 
-def load_model(model, model_name, device):
+def load_data_hsja_attack(dataset = 'mnist',
+                          path = 'data',
+                          train = True,
+                          transforms = torchvision.transforms.ToTensor(),
+                          download = True):
+    return load_data(dataset=dataset, 
+                     path=path, 
+                     train=train, 
+                     batch_size=1, 
+                     transforms=transforms,
+                     download=download)
+
+def load_model(model, model_name, device, path = 'Baseline Models/models/'):
     '''
     Loads a model.
     '''
-    state_dict = torch.load(model_name, map_location=device)
+    if model_name[-3:] != '.pt':
+        model_name += '.pt'
+    state_dict = torch.load(path + model_name, map_location=device)
     if is_leaky(model):
         state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}  # Exclude memory states from loading
         model.load_state_dict(state_dict, strict=False)
@@ -87,7 +102,7 @@ def plot_attack(original_images,
     plt.tight_layout(); fig.subplots_adjust(top=1.1)
     plt.show()
     
-def get_object_name(obj, neat = True):
+def get_object_name(obj, neat = False):
     '''
     Returns the name of the object.
     If neat = True, returns everything before a "_" symbol and neatens LIF and ParaLIF.
@@ -107,6 +122,9 @@ def is_leaky(model):
     Returns True if model has a "Leaky" neuron. 
     False otherwise.
     '''
+    # if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN) or isinstance(model, GeneralSNN):
+    #     return True
+    # # This is to take care of any other SNN models that I have not accounted for above.
     for module in model.modules():
         if get_object_name(module) == 'Leaky':
             return True
