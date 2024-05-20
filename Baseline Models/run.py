@@ -15,14 +15,14 @@ batch_size = 256
 learning_rate = 0.001 # use 0.001 for ParaLIF
 n_epochs = 5
 
-# optimizer = torch.optim.SGD # Best for SimpleSNN
-# optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
+#optimizer = torch.optim.SGD # Best for SimpleSNN
+#optimizer = torch.optim.Adam # NOTE: Adam doesn't seem to perform well on CIFAR with SimpleSNN
 optimizer = torch.optim.Adamax # Best for ParaLIF
 
 
 ### LIF/ParaLIF Hyperparameters ###
 
-num_steps = 30
+num_steps = 20
 tau_mem = 0.02
 tau_syn = 0.02
 decay_rate = 0.
@@ -31,7 +31,7 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 ##### Options #####
 
-dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
+dataset = 'mnist' # ['mnist', 'cifar', 'fashion']
 train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
 plot = True
 
@@ -46,7 +46,7 @@ model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device
 # model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 
 load_name = None #'MNIST-Frankenstein-1-epochs' # set to None if loading not required
-save_name = 'FASHION-SimpleParaLIF-10-epochs' # set to None if saving not required
+save_name = None #'FASHION-SimpleParaLIF-10-epochs' # set to None if saving not required
 
 
 

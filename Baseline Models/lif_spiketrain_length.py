@@ -12,11 +12,10 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if 
 
 ##### Options #####
 
-
 batch_size = 256
 learning_rate = 0.001 # use 0.001 for ParaLIF
 
-steps = [1, 2, 4, 8, 16, 32, 64, 128]  # powers of 2 so we have results on the log scale
+steps = [1,2,4,8,16,32,64]  # powers of 2 so we have results on the log scale
 
 n_epochs = 5
 
@@ -30,7 +29,10 @@ decay_rate = 0.
 spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT', 'GS']
 
 dataset = 'fashion' # ['mnist', 'cifar', 'fashion']
-attack = fb.attacks.LinfFastGradientAttack()
+attacks = [fb.attacks.LinfFastGradientAttack(), 
+           fb.attacks.LinfDeepFoolAttack(),
+           fb.attacks.LInfFMNAttack(),
+           ]
 
 
 ##### Functions #####
@@ -44,8 +46,6 @@ def train_model(model, loader, optimizer, device, num_steps, n_epochs=20):
         model.train()
         n_correct, n_total = 0, 0
         for i, (features, labels) in enumerate(loader):
-            #features = add_noise(features, num_steps)
-            
             features, labels = features.to(device), labels.to(device)
             output = model(features)
             loss = criterion(output, labels)
@@ -125,35 +125,36 @@ test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False,
 
 train_accuracy = []
 test_accuracy = []
-attack_susceptibility = []
+attack_susceptibility = [[]]
 
 
 for n_steps in steps:
     model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=n_steps, tau_mem=tau_mem, tau_syn=tau_syn).to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adamax(model.parameters(), lr=learning_rate)
     start_time = time.time()
     model = train_model(model, loader=train_loader, optimizer=optimizer,device=device,num_steps=n_steps, n_epochs=n_epochs)
     train_accuracy.append(test_model(model, loader=train_loader, device=device, num_steps=n_steps))
     test_accuracy.append(test_model(model, loader=test_loader, device=device, num_steps=n_steps))
-    attack_susceptibility.append(adv_attack(model, attack=attack))
+    attack_susceptibility.append
+    for attack in attacks:
+        attack_susceptibility[-1].append(adv_attack(model, attack=attack))
 
 
 ##### Plotting #####
 
-steps = torch.log2(torch.tensor(steps))
+print(train_accuracy)
+print(test_accuracy)
+print(attack_susceptibility)
 
-fig, axs = plt.subplots(1, 2)
-
-plt.plot(results['epochs'], results['train accuracies'])
-plt.plot(results['epochs'], results['val accuracies'])
-plt.legend(('Train', 'Test'))
-plt.show()
-
+fig, axs = plt.subplots(2, 1)
+axs[0].set_xscale('log')
+axs[1].set_xscale('log')
 axs[0].plot(steps, train_accuracy, label = 'Train Accuracy')
 axs[0].plot(steps, test_accuracy, label='Test Accuracy')
 axs[0].legend(loc='lower right')
 axs[1].plot(steps, attack_susceptibility, label='Attack Susceptibility')
-axs[1].legend(loc='lower right')
+axs[1].legend(loc='upper right')
+axs[1].set_xlabel('Number of Steps')
 plt.suptitle('Impact of Number of Steps')
 # axs[0].set_xticks(torch.arange(min(steps), max(steps)))
 # axs[1].set_xticks(torch.arange(min(steps), max(steps)))
