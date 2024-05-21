@@ -130,7 +130,41 @@ class LeNet5_Representations_Flexible(nn.Module):
             return x
         x = self.fc3(x)
         return x # [256, 10]
-    
+
+class LeNet5_Representations_Flexible_CIFAR(nn.Module):
+    def __init__(self, n_classes):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 6, kernel_size=5, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120) 
+        self.bn3 = nn.BatchNorm1d(120)
+        self.fc2 = nn.Linear(120, 84)
+        self.bn4 = nn.BatchNorm1d(84)
+        self.fc3 = nn.Linear(84, n_classes)
+
+    def forward(self, x, extraction_layer = None):
+        x = self.bn1(self.conv1(x))
+        x = self.pool(F.relu(x))
+        if extraction_layer == 0: # After one convolution [256, 1176]
+            return x.view(x.shape[0], -1)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+        x = x.view(x.shape[0], -1)
+        if extraction_layer == 1: # After both convolutions [256, 400]
+            return x
+        x = self.bn3(self.fc1(x))
+        x = F.relu(x)
+        if extraction_layer == 2: # After one FC layer [256, 120]
+            return x
+        x = self.bn4(self.fc2(x))
+        x = F.relu(x)
+        if extraction_layer == 3: # After two FC layers [256, 84]
+            return x
+        x = self.fc3(x)
+        return x # [256, 10]
 
 class SimpleSNN(nn.Module):
     # Slightly modified Florian's implementation
