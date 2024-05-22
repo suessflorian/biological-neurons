@@ -168,9 +168,10 @@ class LeNet5_Representations_Flexible_CIFAR(nn.Module):
 
 class SimpleSNN(nn.Module):
     # Slightly modified Florian's implementation
-    torch.manual_seed(0) #  deterministic weight initials for perceptrons 
-    def __init__(self, input_size, decay_rate=0.9, num_steps=10):
+    def __init__(self, input_size, decay_rate=0.9, num_steps=10, seed=0):
         super(SimpleSNN, self).__init__()
+        
+        torch.manual_seed(seed)
         
         self.fc1 = nn.Linear(input_size, 2**9)
         self.lif1 = snn.Leaky(
@@ -219,8 +220,9 @@ class SimpleSNN(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
 
 class GeneralSNN(nn.Module):
-    def __init__(self, layer_sizes, decay_rate=0.9, num_steps=10):
+    def __init__(self, layer_sizes, decay_rate=0.9, num_steps=10, seed=0):
         super().__init__()
+        torch.manual_seed(seed)
         self.n_layers = len(layer_sizes) - 1
         
         for i, (l1, l2) in enumerate(zip(layer_sizes, layer_sizes[1:])):
@@ -250,11 +252,11 @@ class GeneralSNN(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
     
 class SimpleSNN_EMNIST(nn.Module):
-    # Slightly modified Florian's implementation
-    torch.manual_seed(0) #  deterministic weight initials for perceptrons 
-    def __init__(self, input_size, decay_rate=0.9, num_steps=10):
+    # Slightly modified Florian's implementation 
+    def __init__(self, input_size, decay_rate=0.9, num_steps=10, seed=0):
         super(SimpleSNN, self).__init__()
         
+        torch.manual_seed(seed)
         self.fc1 = nn.Linear(input_size, 2**9)
         self.lif1 = snn.Leaky(
             beta=decay_rate,
@@ -302,10 +304,11 @@ class SimpleSNN_EMNIST(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
     
 class LargerSNN(nn.Module):
-    # Slightly modified Florian's implementation
-    torch.manual_seed(0) #  deterministic weight initials for perceptrons 
-    def __init__(self, input_size, decay_rate=0.9, num_steps=10):
+    # Slightly modified Florian's implementation 
+    def __init__(self, input_size, decay_rate=0.9, num_steps=10, seed=0):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.fc1 = nn.Linear(input_size, 2**11)
         self.lif1 = snn.Leaky(
@@ -366,10 +369,11 @@ class LargerSNN(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
     
 class SimpleParaLif(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False, num_steps= 10, 
-                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
 
@@ -396,10 +400,11 @@ class SimpleParaLif(nn.Module):
         return x.softmax(dim=1)            
     
 class SimpleConvPara(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         self.device = device
@@ -477,9 +482,10 @@ class SimpleConvPara(nn.Module):
         return x.softmax(dim=1)    
 
 class ConvAndLifMnist(nn.Module):
-    torch.manual_seed(1123)
-    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -535,9 +541,10 @@ class ConvAndLifMnist(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0)
     
 class ConvAndLifMnist1(nn.Module):
-    torch.manual_seed(1123)
-    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -586,9 +593,10 @@ class ConvAndLifMnist1(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0)
     
 class ConvAndLifFashion(nn.Module):
-    torch.manual_seed(1123)
-    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -649,9 +657,10 @@ class ConvAndLifFashion(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0)
     
 class ConvAndLifFashion1(nn.Module):
-    torch.manual_seed(1123)
-    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -705,10 +714,11 @@ class ConvAndLifFashion1(nn.Module):
         return torch.stack(output_spikes, dim=0).sum(dim=0)
 
 class ConvAndParaMnist(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -756,10 +766,11 @@ class ConvAndParaMnist(nn.Module):
         return x.softmax(dim=1)
     
 class ConvAndParaMnist2(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -809,10 +820,11 @@ class ConvAndParaMnist2(nn.Module):
         return x.softmax(dim=1)
     
 class ConvAndParaMnist1(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -897,10 +909,11 @@ class LeNet5_FASHION(nn.Module):
         return x
     
 class ConvAndParaFashion(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -953,10 +966,11 @@ class ConvAndParaFashion(nn.Module):
         return x.softmax(dim=1)
     
 class ConvAndParaFashion2(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -1009,10 +1023,11 @@ class ConvAndParaFashion2(nn.Module):
         return x.softmax(dim=1)
     
 class ConvAndParaFashion1(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -1069,10 +1084,11 @@ class ConvAndParaFashion1(nn.Module):
         return x.softmax(dim=1)
 
 class ConvAndParaKmnist(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         
@@ -1125,10 +1141,11 @@ class ConvAndParaKmnist(nn.Module):
         return x.softmax(dim=1)
 
 class ConvAndParaCifar(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
-                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
 
@@ -1198,10 +1215,11 @@ class ConvAndParaCifar(nn.Module):
         return x.softmax(dim=1)    
 
 class GeneralParaLIF(nn.Module):
-    torch.manual_seed(1123)
     def __init__(self, layer_sizes, device, spike_mode='SB', recurrent=False, num_steps=10, 
-                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+                 fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
+        
+        torch.manual_seed(seed)
         
         self.num_steps = num_steps
         self.device = device
