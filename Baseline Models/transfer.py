@@ -33,7 +33,6 @@ n_epochs = 20
 num_steps = 20
 tau_mem = 0.02
 tau_syn = 0.02
-decay_rate = 0.
 spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT', 'GS']
 
 
