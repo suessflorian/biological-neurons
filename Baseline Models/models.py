@@ -745,20 +745,6 @@ class ConvAndParaMnist(nn.Module):
         spike_train = rate(flattened, num_steps=self.num_steps)      
         x = torch.swapaxes(spike_train, 0, 1)
 
-        '''animation = spike_train[0]
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation, fig, ax)
-        plt.show()'''
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0], fig, ax)
-        plt.show()'''
-
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
-        plt.show()'''
-
         x = self.paralif1(x)
         x = self.paralif2(x)
         x = self.paralif3(x)
@@ -799,20 +785,6 @@ class ConvAndParaMnist2(nn.Module):
         flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
         spike_train = rate(flattened, num_steps=self.num_steps)      
         x = torch.swapaxes(spike_train, 0, 1)
-
-        '''animation = spike_train[0]
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation, fig, ax)
-        plt.show()'''
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0], fig, ax)
-        plt.show()'''
-
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
-        plt.show()'''
 
         x = self.paralif2(x)
         x = self.paralif3(x)
@@ -856,28 +828,16 @@ class ConvAndParaMnist1(nn.Module):
         spike_train = rate(flattened, num_steps=self.num_steps)      
         x = torch.swapaxes(spike_train, 0, 1)
 
-        '''animation = spike_train[0]
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation, fig, ax)
-        plt.show()'''
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0], fig, ax)
-        plt.show()'''
-
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
-        plt.show()'''
-
         x = self.paralif3(x)
         x = torch.mean(x,1)
         return x.softmax(dim=1)
 
 class LeNet5_FASHION(nn.Module):
-    def __init__(self):
+    def __init__(self, channels, para_input):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=3, stride=1, padding=0)
+        self.para_input = para_input
+
+        self.conv1 = nn.Conv2d(channels, 6, kernel_size=3, stride=1, padding=0)
         self.bn1 = nn.BatchNorm2d(6)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
@@ -885,7 +845,7 @@ class LeNet5_FASHION(nn.Module):
         self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
         self.bn3 = nn.BatchNorm2d(40)
 
-        self.fc1 = nn.Linear(40*5*5, 120) 
+        self.fc1 = nn.Linear(40*para_input**2, 120) 
         self.bn4 = nn.BatchNorm1d(120)
         self.fc2 = nn.Linear(120, 84)
         self.bn5 = nn.BatchNorm1d(84)
@@ -900,7 +860,7 @@ class LeNet5_FASHION(nn.Module):
         x = self.bn3(self.conv3(x))
         x = self.pool(F.relu(x))
 
-        x = x.view(-1, 40*5*5)  # Flatten the tensor for the fully connected layer
+        x = x.view(-1, 40*self.para_input**2)  # Flatten the tensor for the fully connected layer
         x = self.bn4(self.fc1(x))
         x = F.relu(x)
         x = self.bn5(self.fc2(x))
@@ -909,7 +869,7 @@ class LeNet5_FASHION(nn.Module):
         return x
     
 class ConvAndParaFashion(nn.Module):
-    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+    def __init__(self, channels, device, spike_mode='SB', recurrent=False,
                  num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
         
@@ -945,28 +905,14 @@ class ConvAndParaFashion(nn.Module):
         spike_train = rate(flattened, num_steps=self.num_steps)      
         x = torch.swapaxes(spike_train, 0, 1)
 
-        '''animation = spike_train[0]
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation, fig, ax)
-        plt.show()'''
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0], fig, ax)
-        plt.show()'''
-
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
-        plt.show()'''
-        #print(x.shape)
         x = self.paralif1(x)
         x = self.paralif2(x)
         x = self.paralif3(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)
+        return x
     
 class ConvAndParaFashion2(nn.Module):
-    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+    def __init__(self, channels, device, spike_mode='SB', recurrent=False,
                  num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
         
@@ -996,7 +942,7 @@ class ConvAndParaFashion2(nn.Module):
         x = self.pool(F.relu(x))
         x = self.bn3(self.conv3(x))
         x = self.pool(F.relu(x))
-        x = x.view(-1, 40*5*5)  # Flatten the tensor for the fully connected layer
+        x = x.view(-1, 40*5**2)  # Flatten the tensor for the fully connected layer
         x = self.bn4(self.fc1(x))
         x = F.relu(x)
         
@@ -1004,26 +950,13 @@ class ConvAndParaFashion2(nn.Module):
         spike_train = rate(flattened, num_steps=self.num_steps)      
         x = torch.swapaxes(spike_train, 0, 1)
 
-        '''animation = spike_train[0]
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation, fig, ax)
-        plt.show()'''
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0], fig, ax)
-        plt.show()'''
-
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
-        plt.show()'''
         x = self.paralif2(x)
         x = self.paralif3(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)
+        return x
     
 class ConvAndParaFashion1(nn.Module):
-    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+    def __init__(self, channels, device, spike_mode='SB', recurrent=False,
                  num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3, seed=1123):
         super().__init__()
         
@@ -1055,7 +988,7 @@ class ConvAndParaFashion1(nn.Module):
         x = self.bn3(self.conv3(x))
         x = self.pool(F.relu(x))
 
-        x = x.view(-1, 40*5*5)  # Flatten the tensor for the fully connected layer
+        x = x.view(-1, 40*5**2)  # Flatten the tensor for the fully connected layer
         x = self.bn4(self.fc1(x))
         x = F.relu(x)
         x = self.bn5(self.fc2(x))
@@ -1065,23 +998,9 @@ class ConvAndParaFashion1(nn.Module):
         spike_train = rate(flattened, num_steps=self.num_steps)      
         x = torch.swapaxes(spike_train, 0, 1)
 
-        '''animation = spike_train[0]
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation, fig, ax)
-        plt.show()'''
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0], fig, ax)
-        plt.show()'''
-
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
-        plt.show()'''
-        #print(x.shape)
         x = self.paralif3(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)
+        return x
 
 class ConvAndParaKmnist(nn.Module):
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
@@ -1120,25 +1039,471 @@ class ConvAndParaKmnist(nn.Module):
         spike_train = rate(flattened, num_steps=self.num_steps)      
         x = torch.swapaxes(spike_train, 0, 1)
 
-        '''animation = spike_train[0]
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation, fig, ax)
-        plt.show()'''
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0], fig, ax)
-        plt.show()'''
-
-        '''animation = x.cpu().detach()
-        fig, ax = plt.subplots()
-        anim = splt.animator(animation[0].view(x.size(1),x.size(1)), fig, ax)
-        plt.show()'''
-        #print(x.shape)
         x = self.paralif1(x)
         x = self.paralif2(x)
         x = self.paralif3(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)
+        return x
+
+class ConvAndParaKmnist1(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.fc1 = nn.Linear(40*5*5, 120) 
+        self.bn4 = nn.BatchNorm1d(120)
+        self.fc2 = nn.Linear(120, 84)
+        self.bn5 = nn.BatchNorm1d(84)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+
+        x = x.view(-1, 40*5*5)  # Flatten the tensor for the fully connected layer
+        x = self.bn4(self.fc1(x))
+        x = F.relu(x)
+        x = self.bn5(self.fc2(x))
+        x = F.relu(x)
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x
+    
+class ConvAndParaKmnist2(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.fc1 = nn.Linear(40*5*5, 120, device)
+        self.bn4 = nn.BatchNorm1d(120)
+        self.paralif2 = ParaLIF(120, 84, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+        x = x.view(-1, 40*5*5)  # Flatten the tensor for the fully connected layer
+        x = self.bn4(self.fc1(x))
+        x = F.relu(x)
+        
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        x = self.paralif2(x)
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x
+
+class ConvAndLifKmnist(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+
+        self.fc1 = nn.Linear(40*5*5, 120, device)
+        self.lif1 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        
+        self.fc2 = nn.Linear(120, 84, device)
+        self.lif2 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        
+        self.fc3 = nn.Linear(84, 10, device)
+
+    def forward(self, images):
+        # Convolutional layers
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+
+        # LIF feed forward
+        utls.reset(self.lif1)
+        utls.reset(self.lif2)
+        
+        mem1 = self.lif1.init_leaky()
+        mem2 = self.lif2.init_leaky()
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)
+        
+        output_spikes = []
+        for step in range(self.num_steps):
+            x = self.fc1(spike_train[step])
+            x, mem1 = self.lif1(x, mem1)
+            
+            x = self.fc2(x)
+            x, mem2 = self.lif2(x, mem2)
+            
+            x = self.fc3(x)
+            output_spikes.append(x)
+
+        return torch.stack(output_spikes, dim=0).sum(dim=0)
+    
+class ConvAndLifKmnist1(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.fc1 = nn.Linear(40*5*5, 120, device)
+        self.bn4 = nn.BatchNorm1d(120)
+        
+        self.fc2 = nn.Linear(120, 84, device)
+        self.lif2 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        
+        self.fc3 = nn.Linear(84, 10, device)
+
+    def forward(self, images):
+        # Convolutional layers
+        # Convolutional layers
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+        
+        x = x.view(x.size(0), -1) # (batch, colour_channel*width*height)
+        x = self.bn4(self.fc1(x))
+        x = F.relu(x)
+
+        # LIF feed forward
+        utls.reset(self.lif2)
+        
+        mem2 = self.lif2.init_leaky()
+        spike_train = rate(x, num_steps=self.num_steps)
+        
+        output_spikes = []
+        for step in range(self.num_steps):
+            x = self.fc2(spike_train[step])
+            x, mem2 = self.lif2(x, mem2)
+            
+            x = self.fc3(x)
+            output_spikes.append(x)
+
+        return torch.stack(output_spikes, dim=0).sum(dim=0)
+
+class ConvAndParaSVHN(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, channels, para_input, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(channels, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.paralif1 = ParaLIF(40*para_input*para_input, 120, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step) # or 4x4
+        self.paralif2 = ParaLIF(120, 84, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        x = self.paralif1(x)
+        x = self.paralif2(x)
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x
+    
+class ConvAndParaSVHN2(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, channels, para_input, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        self.fc_inp = para_input
+        
+        self.conv1 = nn.Conv2d(channels, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.fc1 = nn.Linear(40*para_input*para_input, 120, device)
+        self.bn4 = nn.BatchNorm1d(120)
+        self.paralif2 = ParaLIF(120, 84, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+        x = x.view(-1, 40*self.fc_inp**2)  # Flatten the tensor for the fully connected layer
+        x = self.bn4(self.fc1(x))
+        x = F.relu(x)
+        
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        x = self.paralif2(x)
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x
+    
+class ConvAndParaSVHN1(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, channels, para_input, device, spike_mode='SB', recurrent=False,
+                 num_steps= 10, fire=True, tau_mem=1e-3, tau_syn=1e-3, time_step=1e-3):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        self.fc_inp = para_input
+        
+        self.conv1 = nn.Conv2d(channels, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.fc1 = nn.Linear(40*para_input*para_input, 120) 
+        self.bn4 = nn.BatchNorm1d(120)
+        self.fc2 = nn.Linear(120, 84)
+        self.bn5 = nn.BatchNorm1d(84)
+        self.paralif3 = ParaLIF(84, 10, device, spike_mode, recurrent, fire, tau_mem,
+                                tau_syn, time_step)
+
+    def forward(self, images):
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+
+        x = x.view(-1, 40*self.fc_inp**2)  # Flatten the tensor for the fully connected layer
+        x = self.bn4(self.fc1(x))
+        x = F.relu(x)
+        x = self.bn5(self.fc2(x))
+        x = F.relu(x)
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)      
+        x = torch.swapaxes(spike_train, 0, 1)
+
+        x = self.paralif3(x)
+        x = torch.mean(x,1)
+        return x
+
+class ConvAndLifSVHN(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(3, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+
+        self.fc1 = nn.Linear(40*6*6, 120, device)
+        self.lif1 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        
+        self.fc2 = nn.Linear(120, 84, device)
+        self.lif2 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        
+        self.fc3 = nn.Linear(84, 10, device)
+
+    def forward(self, images):
+        # Convolutional layers
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+
+        # LIF feed forward
+        utls.reset(self.lif1)
+        utls.reset(self.lif2)
+        
+        mem1 = self.lif1.init_leaky()
+        mem2 = self.lif2.init_leaky()
+
+        flattened = x.view(x.size(0), -1)  # (batch, colour_channel*width*height)
+        spike_train = rate(flattened, num_steps=self.num_steps)
+        
+        output_spikes = []
+        for step in range(self.num_steps):
+            x = self.fc1(spike_train[step])
+            x, mem1 = self.lif1(x, mem1)
+            
+            x = self.fc2(x)
+            x, mem2 = self.lif2(x, mem2)
+            
+            x = self.fc3(x)
+            output_spikes.append(x)
+
+        return torch.stack(output_spikes, dim=0).sum(dim=0)
+    
+class ConvAndLifSVHN1(nn.Module):
+    torch.manual_seed(1123)
+    def __init__(self, input_size, device, decay_rate = 0.9, num_steps= 10):
+        super().__init__()
+        
+        self.num_steps = num_steps
+        
+        self.conv1 = nn.Conv2d(3, 6, kernel_size=3, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=3, stride=1, padding=0)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 40, kernel_size=3, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(40)
+
+        self.fc1 = nn.Linear(40*6*6, 120, device)
+        self.bn4 = nn.BatchNorm1d(120)
+        
+        self.fc2 = nn.Linear(120, 84, device)
+        self.lif2 = snn.Leaky(
+            beta=decay_rate,
+            spike_grad=snn.surrogate.atan()
+        )
+        
+        self.fc3 = nn.Linear(84, 10, device)
+
+    def forward(self, images):
+        # Convolutional layers
+        # Convolutional layers
+        x = self.bn1(self.conv1(images))
+        x = F.relu(x)
+        x = self.bn2(self.conv2(x))
+        x = self.pool(F.relu(x))
+        x = self.bn3(self.conv3(x))
+        x = self.pool(F.relu(x))
+        
+        x = x.view(x.size(0), -1) # (batch, colour_channel*width*height)
+        x = self.bn4(self.fc1(x))
+        x = F.relu(x)
+
+        # LIF feed forward
+        utls.reset(self.lif2)
+        
+        mem2 = self.lif2.init_leaky()
+        spike_train = rate(x, num_steps=self.num_steps)
+        
+        output_spikes = []
+        for step in range(self.num_steps):
+            x = self.fc2(spike_train[step])
+            x, mem2 = self.lif2(x, mem2)
+            
+            x = self.fc3(x)
+            output_spikes.append(x)
+
+        return torch.stack(output_spikes, dim=0).sum(dim=0)
 
 class ConvAndParaCifar(nn.Module):
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
@@ -1212,7 +1577,7 @@ class ConvAndParaCifar(nn.Module):
         x = self.paralif1(x)
         x = self.paralif2(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)    
+        return x   
 
 class GeneralParaLIF(nn.Module):
     def __init__(self, layer_sizes, device, spike_mode='SB', recurrent=False, num_steps=10, 

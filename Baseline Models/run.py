@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein, LeNet5_Flexible, GeneralSNN, LeNet5_Representations_Flexible, LeNet5_Representations_Flexible_CIFAR
+from models import *
 from scripts import train_model, test_model
 from utils import load_data, get_object_name, load_model
 import time
