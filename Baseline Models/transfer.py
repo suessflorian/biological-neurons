@@ -44,7 +44,7 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 pretrained_model = LeNet5_Representations_Flexible(10)
 pretrained_model = LeNet5_Representations_Flexible_CIFAR(10)
-pretrained_load_name = 'SVHN-LeNet5-6-epochs-transfer' # set to None if loading not required
+pretrained_load_name = 'SVHN-LeNet5-6-epochs-transfer'
 
 train = False # Set to False if model training is not required (i.e. you only want to evaluate a model)
 load = True # this is for loading the post-representation models. The pretrained_model is always loaded and should NOT be trained.
