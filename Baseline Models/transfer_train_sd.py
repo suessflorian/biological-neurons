@@ -26,7 +26,7 @@ append_results_to_csv = True # setting this to False will replace the .csv
 ##### Hyperparameters #####
 
 batch_size = 256
-n_epochs = 5
+n_epochs = 20
 n_trials = 5
 
 ### LIF/ParaLIF Hyperparameters ###
@@ -49,8 +49,8 @@ pretrained_model = LeNet5_Representations_Flexible(10) #MNIST/FASHION
 
 # ONLY USE TRANSFER MODELS HERE - THEY ARE SPECIFICALLY TRAINED ON [0, 1] DATA
 
-pretrained_load_name = 'MNIST-LeNet5-3-epochs-transfer'
-# pretrained_load_name = 'FASHION-LeNet5-20-epochs-transfer'
+# pretrained_load_name = 'MNIST-LeNet5-3-epochs-transfer'
+pretrained_load_name = 'FASHION-LeNet5-20-epochs-transfer'
 # pretrained_load_name = 'SVHN-LeNet5-6-epochs-transfer'
 
 
