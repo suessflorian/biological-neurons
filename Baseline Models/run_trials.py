@@ -6,7 +6,7 @@ from scripts import train_model, test_model
 from utils import load_data
 import time
 
-device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu') # blank
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
@@ -27,7 +27,7 @@ decay_rate = 0.
 
 train = True 
 plot = False 
-no_of_trials = 5
+no_of_trials = 5 
 
 ##### Set models #####
 
@@ -119,7 +119,13 @@ for ind, model_name in enumerate(model_names):
         save_dict[i]['train_accuracy'] = train_accuracy
         save_dict[i]['test_accuracy'] = test_accuracy
     
+        for layer in model.children():
+            if hasattr(layer, 'reset_parameters'):
+                layer.reset_parameters()
+    
     final_dict[model_name] = save_dict
+    
+    
 
 with open(f'Baseline Models/{dataset.upper()}-trial-results.json', 'w') as fp:
     json.dump(final_dict, fp)
