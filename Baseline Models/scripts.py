@@ -4,7 +4,7 @@ from utils import printf
 
 def train_model(model, loader, optimizer, n_epochs, device, val_loader=None):
     criterion = torch.nn.CrossEntropyLoss()
-
+    model = model.to(device)
     train_loss, train_acc, val_acc = [], [], []
 
     for epoch in range(n_epochs):
