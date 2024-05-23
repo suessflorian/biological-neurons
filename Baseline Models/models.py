@@ -168,10 +168,15 @@ class GeneralSNN(nn.Module):
         output_spikes = []
         for step in range(self.num_steps):
             x = spike_train[step]
+            temp = 0
             for i in range(self.n_layers - 1):
                 x = self._modules[f'fc{i}'](x)
                 x, mems[i] = self._modules[f'lif{i}'](x, mems[i])
-            x = self._modules[f'fc{i+1}'](x)
+                temp = i
+            if temp == 0:
+                x = self._modules[f'fc{temp}'](x)
+            else: 
+                x = self._modules[f'fc{temp+1}'](x)
             output_spikes.append(x)
         return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
     

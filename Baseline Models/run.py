@@ -31,11 +31,11 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 dataset = 'mnist' # [mnist, cifar, fashion, emnist, kmnist, svhn]
 train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
-plot = True
+plot = False
 
 # model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
 # model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
-model = GeneralSNN(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), num_steps=num_steps)
+model = GeneralSNN(layer_sizes=(28*28, 10), num_steps=num_steps)
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
 # model = LeNet5_Flexible(n_classes=47) # EMNIST
@@ -75,7 +75,7 @@ test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False,
 model = model.to(device)
 
 if load_name:
-    model = load_model(model, model_name='Baseline Models/models/' + load_name + '.pt', device=device)
+    model = load_model(model, model_name='./models/' + load_name + '.pt', device=device)
     print('Model loaded successfully.')
 
 optimizer = optimizer(model.parameters(), lr=learning_rate)
@@ -122,4 +122,4 @@ if save_name and train and input('Do you want to save??: ').lower() in ['y', 'ye
     state_dict = model.state_dict()
     if isinstance(model, SimpleSNN) or isinstance(model, LargerSNN):
         state_dict = {k: v for k, v in state_dict.items() if 'mem' not in k}
-    torch.save(state_dict, 'Baseline Models/models/' + save_name + '.pt')
+    torch.save(state_dict, './models/' + save_name + '.pt')

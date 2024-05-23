@@ -11,7 +11,7 @@ def train_model(model, loader, optimizer, n_epochs, device, val_loader=None):
         model.train()
         epoch_loss = 0
         n_correct, n_total = 0, 0
-        for i, (features, labels) in enumerate(loader):
+        for (i, (features, labels)) in enumerate(loader):
             features, labels = features.to(device), labels.to(device)
             
             output = model(features)
