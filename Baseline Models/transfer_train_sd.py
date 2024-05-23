@@ -19,7 +19,7 @@ original_device = torch.device('mps' if torch.backends.mps.is_available() else '
 
 
 
-dataset = 'fashion' # [mnist, cifar, fashion, emnist, kmnist, svhn]
+dataset = 'svhn' # [mnist, cifar, fashion, emnist, kmnist, svhn]
 append_results_to_csv = True # setting this to False will replace the .csv
 
 
