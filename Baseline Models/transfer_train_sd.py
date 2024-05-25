@@ -43,60 +43,15 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 ##### Model Configuration #####
 
-pretrained_model = LeNet5_Representations_Flexible(10) #MNIST/FASHION
-# pretrained_model = LeNet5_Representations_Flexible_CIFAR(10) # SVHN
+# pretrained_model = LeNet5_Representations_Flexible(10) #MNIST/FASHION
+pretrained_model = LeNet5_Representations_Flexible_CIFAR(10) # SVHN
 
 
 # ONLY USE TRANSFER MODELS HERE - THEY ARE SPECIFICALLY TRAINED ON [0, 1] DATA
 
 # pretrained_load_name = 'MNIST-LeNet5-3-epochs-transfer'
-pretrained_load_name = 'FASHION-LeNet5-20-epochs-transfer'
-# pretrained_load_name = 'SVHN-LeNet5-6-epochs-transfer'
-
-
-paraLIF_models = [
-    # MNIST/FASHION
-    GeneralParaLIF(layer_sizes=(864, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    GeneralParaLIF(layer_sizes=(256, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    GeneralParaLIF(layer_sizes=(120, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    GeneralParaLIF(layer_sizes=(84, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    GeneralParaLIF(layer_sizes=(10, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
-    
-    # # CIFAR/SVHN
-    # GeneralParaLIF(layer_sizes=(1176, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    # GeneralParaLIF(layer_sizes=(400, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    # GeneralParaLIF(layer_sizes=(120, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    # GeneralParaLIF(layer_sizes=(84, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    # GeneralParaLIF(layer_sizes=(10, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
-]
-
-LIF_models = [
-    # MNIST/FASHION
-    GeneralSNN(layer_sizes=(864, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    GeneralSNN(layer_sizes=(256, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    GeneralSNN(layer_sizes=(120, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    GeneralSNN(layer_sizes=(84, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    GeneralSNN(layer_sizes=(10, 2**9, 2**8, 2**7, 10), num_steps=num_steps)
-    
-    # # CIFAR/SVHN
-    # GeneralSNN(layer_sizes=(1176, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    # GeneralSNN(layer_sizes=(400, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    # GeneralSNN(layer_sizes=(120, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    # GeneralSNN(layer_sizes=(84, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    # GeneralSNN(layer_sizes=(10, 2**9, 2**8, 2**7, 10), num_steps=num_steps)
-]
-
-paraLIF_optimizers = [torch.optim.Adamax(m.parameters(), lr=0.001) for m in paraLIF_models]
-LIF_optimizers = [torch.optim.SGD(m.parameters(), lr=0.01) for m in LIF_models]
-
-
-
-
-
-
-
-
-
+# pretrained_load_name = 'FASHION-LeNet5-20-epochs-transfer'
+pretrained_load_name = 'SVHN-LeNet5-6-epochs-transfer'
 
 
 
@@ -132,16 +87,52 @@ results = {
 start_time = time.time()
 print('\n---------- Training ----------\n')
 
-for i, (model, optimizer) in enumerate(zip(paraLIF_models + LIF_models, 
-                                            paraLIF_optimizers + LIF_optimizers)):
-    extraction_layer = i % len(paraLIF_models)
+for trial in range(n_trials):
     
-    if is_leaky(model): # this actually tests if the model has LIF neurons rather than if it's leaky.
-        device = torch.device('cpu')
-    else:
-        device = original_device
+    paraLIF_models = [
+        # # MNIST/FASHION
+        # GeneralParaLIF(layer_sizes=(864, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        # GeneralParaLIF(layer_sizes=(256, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        # GeneralParaLIF(layer_sizes=(120, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        # GeneralParaLIF(layer_sizes=(84, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        # GeneralParaLIF(layer_sizes=(10, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
+        
+        # CIFAR/SVHN
+        GeneralParaLIF(layer_sizes=(1176, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        GeneralParaLIF(layer_sizes=(400, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        GeneralParaLIF(layer_sizes=(120, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        GeneralParaLIF(layer_sizes=(84, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+        GeneralParaLIF(layer_sizes=(10, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
+    ]
+
+    LIF_models = [
+        # # MNIST/FASHION
+        # GeneralSNN(layer_sizes=(864, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=trial+0),
+        # GeneralSNN(layer_sizes=(256, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=trial+1),
+        # GeneralSNN(layer_sizes=(120, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=trial+2),
+        # GeneralSNN(layer_sizes=(84, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=trial+3),
+        # GeneralSNN(layer_sizes=(10, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=trial+4)
+        
+        # CIFAR/SVHN
+        GeneralSNN(layer_sizes=(1176, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=0),
+        GeneralSNN(layer_sizes=(400, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=1),
+        GeneralSNN(layer_sizes=(120, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=2),
+        GeneralSNN(layer_sizes=(84, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=3),
+        GeneralSNN(layer_sizes=(10, 2**9, 2**8, 2**7, 10), num_steps=num_steps, seed=4)
+    ]
+
+    paraLIF_optimizers = [torch.optim.Adamax(m.parameters(), lr=0.001) for m in paraLIF_models]
+    LIF_optimizers = [torch.optim.SGD(m.parameters(), lr=0.01) for m in LIF_models]
     
-    for trial in range(n_trials):
+    for i, (model, optimizer) in enumerate(zip(paraLIF_models + LIF_models, 
+                                                paraLIF_optimizers + LIF_optimizers)):
+        extraction_layer = i % len(paraLIF_models)
+        
+        if is_leaky(model): # this actually tests if the model has LIF neurons rather than if it's leaky.
+            device = torch.device('cpu')
+        else:
+            device = original_device
+    
         model.train()
         for epoch in range(n_epochs):
             for j, (images, labels) in enumerate(train_loader):
