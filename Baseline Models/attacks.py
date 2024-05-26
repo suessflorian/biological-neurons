@@ -1,6 +1,10 @@
 import torch
 import foolbox as fb
 import numpy as np
+import torch.nn as nn
+from art.estimators.classification import PyTorchClassifier
+
+import copy
 
 def fgsm_attack(model, loss_fn, images, labels, epsilon):
     '''Fast Gradient Sign Method'''
@@ -14,22 +18,68 @@ def fgsm_attack(model, loss_fn, images, labels, epsilon):
     output = model(perturbed_image)
     return perturbed_image, output.argmax(dim = -1)
 
-def foolbox_attack(model, images, labels, attack, epsilons, device):
+def foolbox_attack(model, images, labels, attack, epsilons, device, verbose = True):
     # raise NotImplementedError('Function "foolbox_attack" is not finished.')
     model.eval()
     # Attack on a single batch
     fmodel = fb.PyTorchModel(model, bounds=(0,1), device=device)
-    # try:
     raw_attack, perturbed_image, is_adv = attack(fmodel, images, labels, epsilons=epsilons)
     with torch.no_grad():
         original_predictions = model(images).argmax(dim = -1)
         perturbed_predictions = model(perturbed_image).argmax(dim = -1)
         return raw_attack, perturbed_image, perturbed_predictions, original_predictions
-    # except:
-    #     return None, None, None, model(images).argmax(dim = -1)
     
 
+def art_attack(model, images, labels, attack, epsilons, device, verbose = False):
 
+    images, labels = images.to(device), labels.to(device)
+    
+    model = model.to(device)
+    
+    # this doesn't matter
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    
+    if 'SimBA' in str(attack):
+        model = nn.Sequential(model, nn.Softmax(dim=1)).to(device)
+    
+    artIntermediaryClassifier = PyTorchClassifier(
+        model = model,
+        loss = nn.CrossEntropyLoss(), # this doesn't matter
+        optimizer = optimizer, # this doesn't matter either
+        input_shape= images.shape[1:],
+        nb_classes= 10,
+        clip_values=(-1,1)
+    )
+    
+    if "SquareAttack" in str(attack):
+        method = attack(estimator=artIntermediaryClassifier, eps=epsilons, verbose=verbose)
+    elif 'SimBA' in str(attack):
+        method = attack(classifier=artIntermediaryClassifier, epsilon=epsilons)
+    elif "BoundaryAttack" in str(attack):
+        method = attack(estimator=artIntermediaryClassifier, epsilon=epsilons, targeted=False, max_iter=500)
+    
+    # Non-epsilon based attacks
+    elif "hopskipjump" in str(attack): # hopskipjump is NOT a typo
+        print('WARNING: THE HOP SKIP JUMP ATTACK IS VERY SLOW', max_eval=100)
+        print('WARNING: This attack is NOT epsilon-based')
+        method = attack(classifier=artIntermediaryClassifier, verbose=verbose)
+    elif "ZooAttack" in str(attack):
+        print('WARNING: THE HOP SKIP JUMP ATTACK IS VERY SLOW', max_eval=100)
+        print('WARNING: This attack is NOT epsilon-based')
+        method = attack(classifier=artIntermediaryClassifier, verbose=verbose)
+
+    adv = method.generate(x=images.cpu().numpy())
+    
+    perturbed_images = torch.tensor(adv).to(device)
+    raw_attack = torch.clamp(perturbed_images - images, min=-epsilons, max=epsilons)
+    perturbed_images = images + raw_attack
+    
+    with torch.no_grad():
+        model.eval()
+        original_predictions = model(images).argmax(dim=-1)
+        perturbed_predictions = model(perturbed_images).argmax(dim=-1)
+        return raw_attack, perturbed_images, perturbed_predictions, original_predictions
+    
 
 
 

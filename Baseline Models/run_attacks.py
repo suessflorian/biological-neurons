@@ -3,11 +3,14 @@ import torchvision
 from utils import load_data, plot_attack, printf
 from scripts import test_model
 from models import LeNet5_CIFAR, LeNet5_MNIST, SimpleSNN, SimpleParaLif, LargerSNN , GeneralParaLIF, Frankenstein
-from attacks import foolbox_attack
+from attacks import foolbox_attack, art_attack
+from art.attacks.evasion import SquareAttack, SimBA, BoundaryAttack, HopSkipJump, ZooAttack
 import foolbox as fb
 import numba
 
 ### GPU doesn't work for me properly - might be an easy fix though.
+
+torch.backends.mps.is_available = lambda : False
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
 # device = torch.device('cpu')
@@ -29,27 +32,47 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 use_train_data = False # Training data is used to generate attacks if True, testing data otherwise
 n_successful_batches = float('Inf') # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
-max_batches = float('Inf') # The number of batches to run
-epsilons = 0.01
+max_batches = 4 #float('Inf') # The number of batches to run
+epsilons = 0.2
 plot = True
 evaluate_model = True # set to False if you know how good this model is and only want to run attacks
 
+
+
+
 ### Attacks ###
 
-attack = fb.attacks.LinfFastGradientAttack()
-# attack = fb.attacks.LinfDeepFoolAttack() # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
+# FGSM, DeepFool and FMNA are from foolbox. The rest are from ART.
+
+# attack_function = foolbox_attack # https://foolbox.readthedocs.io/en/stable/modules/attacks.html
+attack_function = art_attack # https://github.com/Trusted-AI/adversarial-robustness-toolbox/wiki/ART-Attacks
+
+
+# attack = fb.attacks.LinfFastGradientAttack()
+# attack = fb.attacks.LinfDeepFoolAttack()
 # attack = fb.attacks.LInfFMNAttack()
+
+
+attack = SquareAttack 
+# attack = SimBA
+# attack = BoundaryAttack
+# attack = HopSkipJump # NOT epsilon-based
+# attack = ZooAttack # NOT epsilon-based
+
+
+
+
 
 
 ### Model Loading ###
 
-# dataset = 'mnist'
-# model_name = 'SimpleParaLIF'
-# n_epochs = 5
-
-dataset = 'fashion'
+dataset = 'mnist'
 model_name = 'SimpleParaLIF'
-n_epochs = 10
+n_epochs = 5
+
+# dataset = 'fashion'
+# model_name = 'SimpleParaLIF'
+# n_epochs = 10
 
 
 ############################## Model ##############################
@@ -126,7 +149,7 @@ batch_count = 0
 for i, (images, labels) in enumerate(loader):
     
     images, labels = images.to(device), labels.to(device)
-    raw_attack, perturbed_image, perturbed_prediction, original_prediction = foolbox_attack(model, 
+    raw_attack, perturbed_image, perturbed_prediction, original_prediction = attack_function(model, 
                                                                                             images=images, 
                                                                                             labels=labels, 
                                                                                             attack=attack, 
