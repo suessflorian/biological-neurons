@@ -7,15 +7,17 @@ import torch
 import torch.nn.functional as F
 from models import GeneralParaLIF, GeneralSNN, LeNet5_Representations_Flexible, LeNet5_Representations_Flexible_CIFAR
 from scripts import test_model
-from utils import load_data, get_object_name, load_model, is_leaky, printf
+from utils import load_data, get_object_name, load_model, is_leaky, printf, ExtractionPreTrained
 import time
 import foolbox as fb
 from math import ceil
-from attacks import foolbox_attack
+from attacks import foolbox_attack, art_attack
+import art
 import pandas as pd
+import copy
 
-original_device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
-
+# original_device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
+original_device = torch.device('cpu')
 
 
 
@@ -42,9 +44,9 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 ##### Model Configuration #####
 
-pretrained_model = LeNet5_Representations_Flexible(10)
+# pretrained_model = LeNet5_Representations_Flexible(10)
 pretrained_model = LeNet5_Representations_Flexible_CIFAR(10)
-pretrained_load_name = 'SVHN-LeNet5-6-epochs-transfer'
+pretrained_load_name = 'SVHN-LeNet5-20-epochs-transfer'
 
 train = False # Set to False if model training is not required (i.e. you only want to evaluate a model)
 load = True # this is for loading the post-representation models. The pretrained_model is always loaded and should NOT be trained.
@@ -53,7 +55,7 @@ save_models = True # set to False if saving not required
 
 
 paraLIF_models = [
-    # MNIST
+    # # MNIST
     # GeneralParaLIF(layer_sizes=(864, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
     # GeneralParaLIF(layer_sizes=(256, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
     # GeneralParaLIF(layer_sizes=(120, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
@@ -69,7 +71,7 @@ paraLIF_models = [
 ]
 
 LIF_models = [
-    # MNIST
+    # # MNIST
     # GeneralSNN(layer_sizes=(864, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
     # GeneralSNN(layer_sizes=(256, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
     # GeneralSNN(layer_sizes=(120, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
@@ -99,13 +101,17 @@ maximum_batches_to_run_attacks_on = ceil(1000 / batch_size) # can also be set ma
 epsilons = [0.01, 0.05, 0.1]
 
 attacks = [
-    fb.attacks.LinfFastGradientAttack(),
-    fb.attacks.LinfDeepFoolAttack(),
-    fb.attacks.LInfFMNAttack()
+    # fb.attacks.LinfFastGradientAttack(),
+    # fb.attacks.LinfDeepFoolAttack(),
+    # fb.attacks.LInfFMNAttack()
+    
+    art.attacks.evasion.SquareAttack
+    
 ]
 
 
 
+attack_functions = [art_attack]
 
 ##### Data #####
 
@@ -247,15 +253,16 @@ baseline_results = {
 
 baseline_name = get_object_name(pretrained_model)
 
-for attack in attacks:
-    attack_name = get_object_name(attack)
+for attack, attack_function in zip(attacks, attack_functions):
+    attack = copy.deepcopy(attack)
+    attack_name = get_object_name(attack, neat=True)
     for epsilon in epsilons:
         total_successful_attacks, total_successful_classifications = 0, 0
         for batch, (images, labels) in enumerate(test_loader):
             printf(f'Attack: {attack_name} on model: {get_object_name(pretrained_model)}, epsilon: {epsilon}, batch: [{batch}/{maximum_batches_to_run_attacks_on}]')
             images, labels = images.to(original_device), labels.to(original_device)
             
-            _, _, perturbed_prediction, original_prediction = foolbox_attack(pretrained_model,
+            _, _, perturbed_prediction, original_prediction = attack_function(pretrained_model,
                                                                             images,
                                                                             labels,
                                                                             attack,
@@ -308,20 +315,28 @@ for i, model in enumerate(paraLIF_models + LIF_models):
     else:
         device = original_device
     
-    for attack in attacks:
-        attack_name = get_object_name(attack)
+    for attack, attack_function in zip(attacks, attack_functions):
+        attack_name = get_object_name(attack, neat=True)
         for epsilon in epsilons:
             total_successful_attacks, total_successful_classifications = 0, 0
             for batch, (images, labels) in enumerate(test_loader):
                 printf(f'Attack: {attack_name} on model [{i+1}/{len(paraLIF_models) + len(LIF_models)}]: {model_name}, epsilon: {epsilon}, batch: [{batch}/{maximum_batches_to_run_attacks_on}]')
                 images, labels = images.to(original_device), labels.to(device)
-                with torch.no_grad():
-                    pretrained_model.eval()
-                    representations = pretrained_model(images, extraction_layer).to(device)
-                    representations = (representations - representations.min()) / (representations.max() - representations.min())
                 
-                _, _, perturbed_prediction, original_prediction = foolbox_attack(model,
-                                                                                representations,
+                if attack_function is art_attack:
+                    model_for_attack = torch.nn.Sequential(
+                        ExtractionPreTrained(pretrained_model=pretrained_model, extraction_layer=extraction_layer).to(device),
+                        model
+                    )
+                else:
+                    model_fot_attack = model
+                    with torch.no_grad():
+                        pretrained_model.eval()
+                        images = pretrained_model(images, extraction_layer).to(device)
+                        images = (images - images.min()) / (images.max() - images.min())
+                    
+                _, _, perturbed_prediction, original_prediction = attack_function(model_for_attack,
+                                                                                images,
                                                                                 labels,
                                                                                 attack,
                                                                                 epsilon,
@@ -346,8 +361,6 @@ for i, model in enumerate(paraLIF_models + LIF_models):
             results['susceptibility_rate'] += [total_successful_attacks / total_successful_classifications]
             results['train_accuracy'] += [training_accuracies[i]]
             results['test_accuracy'] += [test_accuracies[i]]
-
-
 
 
 
