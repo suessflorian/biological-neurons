@@ -4,7 +4,8 @@ from models import GeneralParaLIF
 from utils import load_data, printf, rate
 import time
 import foolbox as fb
-from attacks import foolbox_attack
+from art.attacks.evasion import SquareAttack, SimBA, BoundaryAttack, HopSkipJump, ZooAttack
+from attacks import foolbox_attack, art_attack
 import matplotlib.pyplot as plt
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
