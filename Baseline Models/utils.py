@@ -3,6 +3,7 @@ import torchvision
 import foolbox as fb
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+import torch.nn as nn
 # from models import SimpleSNN, LargerSNN, GeneralSNN
 
 def printf(string):
@@ -115,6 +116,8 @@ def get_object_name(obj, neat = False):
             name = 'ParaLIF'
         elif 'snn' in name.lower():
             name = 'LIF'
+        elif 'SquareAttack' in str(obj):
+            name = 'SquareAttack'
     return name
 
 def is_leaky(model):
@@ -135,6 +138,17 @@ def make_noisy(images, n_steps):
     Adds noise to the data by averaging a rate encoding.
     '''
     return rate(images, num_steps=n_steps).mean(dim=0)
+
+class ExtractionPreTrained(nn.Module):
+    def __init__(self, pretrained_model, extraction_layer):
+        super().__init__()
+        self.pretrained_model = pretrained_model
+        self.extraction_layer = extraction_layer
+    def forward(self, x):
+        with torch.no_grad():
+            self.pretrained_model.eval()
+            x = self.pretrained_model(x, extraction_layer=self.extraction_layer)
+        return (x - x.min()) / (x.max() - x.min())
 
 # WARNING: Implementation from: https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron
 # Sigmoid Bernoulli Spikes Generation

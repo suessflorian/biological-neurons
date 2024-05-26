@@ -20,7 +20,7 @@ batch_size = 16
 
 ### LIF/ParaLIF Hyperparameters - Required for initialisation ###
 
-num_steps = 30
+num_steps = 20
 tau_mem = 0.02
 tau_syn = 0.02
 decay_rate = 0.
@@ -32,8 +32,8 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 
 use_train_data = False # Training data is used to generate attacks if True, testing data otherwise
 n_successful_batches = float('Inf') # The number of batches you want with successful attacks - set to float('Inf') to get results for the whole dataset
-max_batches = 4 #float('Inf') # The number of batches to run
-epsilons = 0.2
+max_batches = float('Inf') # The number of batches to run
+epsilons = 0.01
 plot = True
 evaluate_model = True # set to False if you know how good this model is and only want to run attacks
 
@@ -66,13 +66,13 @@ attack = SquareAttack
 
 ### Model Loading ###
 
-dataset = 'mnist'
-model_name = 'SimpleParaLIF'
-n_epochs = 5
-
-# dataset = 'fashion'
+# dataset = 'mnist'
 # model_name = 'SimpleParaLIF'
 # n_epochs = 10
+
+dataset = 'fashion'
+model_name = 'SimpleParaLIF'
+n_epochs = 10
 
 
 ############################## Model ##############################

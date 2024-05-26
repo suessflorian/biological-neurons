@@ -36,38 +36,46 @@ def art_attack(model, images, labels, attack, epsilons, device, verbose = False)
     
     model = model.to(device)
     
-    # this doesn't matter
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    
     if 'SimBA' in str(attack):
         model = nn.Sequential(model, nn.Softmax(dim=1)).to(device)
     
     artIntermediaryClassifier = PyTorchClassifier(
         model = model,
         loss = nn.CrossEntropyLoss(), # this doesn't matter
-        optimizer = optimizer, # this doesn't matter either
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01), # this doesn't matter either
         input_shape= images.shape[1:],
         nb_classes= 10,
         clip_values=(-1,1)
     )
     
     if "SquareAttack" in str(attack):
-        method = attack(estimator=artIntermediaryClassifier, eps=epsilons, verbose=verbose)
+        method = attack(estimator=artIntermediaryClassifier, eps=epsilons, verbose=verbose, batch_size=images.shape[0])
     elif 'SimBA' in str(attack):
-        method = attack(classifier=artIntermediaryClassifier, epsilon=epsilons)
+        method = attack(classifier=artIntermediaryClassifier, epsilon=epsilons, verbose=verbose)
     elif "BoundaryAttack" in str(attack):
-        method = attack(estimator=artIntermediaryClassifier, epsilon=epsilons, targeted=False, max_iter=500)
+        method = attack(estimator=artIntermediaryClassifier, epsilon=epsilons, targeted=False, max_iter=500, verbose=verbose)
     
     # Non-epsilon based attacks
     elif "hopskipjump" in str(attack): # hopskipjump is NOT a typo
-        print('WARNING: THE HOP SKIP JUMP ATTACK IS VERY SLOW', max_eval=100)
+        print('WARNING: THE HOP SKIP JUMP ATTACK IS VERY SLOW')
         print('WARNING: This attack is NOT epsilon-based')
         method = attack(classifier=artIntermediaryClassifier, verbose=verbose)
     elif "ZooAttack" in str(attack):
-        print('WARNING: THE HOP SKIP JUMP ATTACK IS VERY SLOW', max_eval=100)
+        print('WARNING: ZOO ATTACK IS VERY SLOW')
         print('WARNING: This attack is NOT epsilon-based')
         method = attack(classifier=artIntermediaryClassifier, verbose=verbose)
-
+    
+    # if images.shape[-1] == 864:
+    #     images = images.view(images.shape[0], 6, 12, 12)
+    # elif images.shape[-1] == 256:
+    #     images = images.view(images.shape[0], 16, 4, 4)
+    # elif images.shape[-1] == 120:
+    #     images = images.view(images.shape[0], 1, 10, 12)
+    # elif images.shape[-1] == 84:
+    #     images = images.view(images.shape[0], 1, 7, 12)
+    # elif images.shape[-1] == 10:
+    #     images = images.view(images.shape[0], 1, 2, 5)
+    
     adv = method.generate(x=images.cpu().numpy())
     
     perturbed_images = torch.tensor(adv).to(device)
