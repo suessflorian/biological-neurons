@@ -5,7 +5,7 @@ Creates a .csv called "transfer.csv" with results on training LIF and paraLIF mo
 
 import torch
 import torch.nn.functional as F
-from models import GeneralParaLIF, GeneralSNN, LeNet5_Representations_Flexible
+from models import GeneralParaLIF, GeneralSNN, LeNet5_Representations_Flexible, LeNet5_Representations_Flexible_CIFAR
 from scripts import test_model
 from utils import load_data, get_object_name, load_model, is_leaky, printf
 import time
@@ -19,7 +19,7 @@ original_device = torch.device('mps' if torch.backends.mps.is_available() else '
 
 
 
-dataset = 'fashion' # [mnist, cifar, fashion, emnist, kmnist, svhn]
+dataset = 'svhn' # [mnist, cifar, fashion, emnist, kmnist, svhn]
 append_results_to_csv = True # setting this to False will replace the .csv
 
 
@@ -33,7 +33,6 @@ n_epochs = 20
 num_steps = 20
 tau_mem = 0.02
 tau_syn = 0.02
-decay_rate = 0.
 spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT', 'GS']
 
 
@@ -44,25 +43,42 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 ##### Model Configuration #####
 
 pretrained_model = LeNet5_Representations_Flexible(10)
-pretrained_load_name = 'FASHION-LeNet5-20-epochs-transfer' # set to None if loading not required
+pretrained_model = LeNet5_Representations_Flexible_CIFAR(10)
+pretrained_load_name = 'SVHN-LeNet5-6-epochs-transfer'
 
-train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
+train = False # Set to False if model training is not required (i.e. you only want to evaluate a model)
 load = True # this is for loading the post-representation models. The pretrained_model is always loaded and should NOT be trained.
 save_models = True # set to False if saving not required
 
 
 
 paraLIF_models = [
-    GeneralParaLIF(layer_sizes=(864, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
-    GeneralParaLIF(layer_sizes=(256, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+    # MNIST
+    # GeneralParaLIF(layer_sizes=(864, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+    # GeneralParaLIF(layer_sizes=(256, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+    # GeneralParaLIF(layer_sizes=(120, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+    # GeneralParaLIF(layer_sizes=(84, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+    # GeneralParaLIF(layer_sizes=(10, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
+    
+    # CIFAR/SVHN
+    GeneralParaLIF(layer_sizes=(1176, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
+    GeneralParaLIF(layer_sizes=(400, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
     GeneralParaLIF(layer_sizes=(120, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
     GeneralParaLIF(layer_sizes=(84, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn),
     GeneralParaLIF(layer_sizes=(10, 2**9, 2**8, 2**7, 10), device=original_device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 ]
 
 LIF_models = [
-    GeneralSNN(layer_sizes=(864, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
-    GeneralSNN(layer_sizes=(256, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
+    # MNIST
+    # GeneralSNN(layer_sizes=(864, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
+    # GeneralSNN(layer_sizes=(256, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
+    # GeneralSNN(layer_sizes=(120, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
+    # GeneralSNN(layer_sizes=(84, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
+    # GeneralSNN(layer_sizes=(10, 2**9, 2**8, 2**7, 10), num_steps=num_steps)
+    
+    # CIFAR/SVHN
+    GeneralSNN(layer_sizes=(1176, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
+    GeneralSNN(layer_sizes=(400, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
     GeneralSNN(layer_sizes=(120, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
     GeneralSNN(layer_sizes=(84, 2**9, 2**8, 2**7, 10), num_steps=num_steps),
     GeneralSNN(layer_sizes=(10, 2**9, 2**8, 2**7, 10), num_steps=num_steps)
@@ -112,7 +128,7 @@ if load:
         load_name = f'{dataset.upper()}-{get_object_name(model)}-Repr-{extraction_layer}-{n_epochs}.pt'
         LIF_models[extraction_layer] = load_model(model, load_name, device=torch.device('cpu'))
     print('Models loaded successfully.')
-    if input('\nYou have loaded pre-trained LIF/ParaLIF models. Do you want to train further? [y/n]: ') != 'y':
+    if train and input('\nYou have loaded pre-trained LIF/ParaLIF models. Do you want to train further? [y/n]: ') != 'y':
         train = False
 
 pretrained_model.eval()
@@ -128,7 +144,7 @@ if train:
                                                paraLIF_optimizers + LIF_optimizers)):
         extraction_layer = i % len(paraLIF_models)
         
-        if is_leaky(model):
+        if is_leaky(model): # this actually tests if the model has LIF neurons rather than if it's leaky.
             device = torch.device('cpu')
         else:
             device = original_device
@@ -198,7 +214,7 @@ with torch.no_grad():
         training_accuracies.append(correct / total)
 
         if i + 1 == len(paraLIF_models):
-            print('\n---------- Halfway there ----------\n')
+            print('\n... Halfway there ...\n')
         
         # Test
         correct, total = 0, 0
@@ -212,9 +228,6 @@ with torch.no_grad():
 
 pretrained_train_accuracy = test_model(pretrained_model, train_loader, original_device)
 pretrained_test_accuracy = test_model(pretrained_model, test_loader, original_device)
-
-
-
 
 
 
