@@ -31,15 +31,22 @@ no_of_trials = 5
 
 ##### Set models #####
 
-dataset = 'fashion'
-model_names = ['LeNet5', 'ConvAndParaFashion2', 'ConvAndParaFashion1', 'ConvAndParaFashion', 'ConvAndLifFashion1', 'ConvAndLifFashion']
-n_epochs_list = [30, 30, 30, 30, 30, 30]
-models = [LeNet5_FASHION(channels=1, para_input=5),\
-          ConvAndParaFashion2(channels=28*28, device=device, spike_mode=spike_mode, num_steps=100, tau_mem=tau_mem, tau_syn=tau_syn),\
-          ConvAndParaFashion1(channels=28*28, device=device, spike_mode=spike_mode, num_steps=100, tau_mem=tau_mem, tau_syn=tau_syn),\
-          ConvAndParaFashion(channels=28*28, device=device, spike_mode=spike_mode, num_steps=100, tau_mem=tau_mem, tau_syn=tau_syn),\
-          ConvAndLifFashion1(input_size=28*28, device=device, decay_rate=0.9, num_steps=100),\
-          ConvAndLifFashion(input_size=28*28, device=device, decay_rate=0.9, num_steps=100)]
+dataset = 'mnist'
+model_names = ['SimpleParaLif', 'SimpleSNN']
+n_epochs_list = [5, 5]
+models = [
+    GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, tau_mem=tau_mem, tau_syn=tau_syn, num_steps=20), 
+    SimpleSNN(input_size=28*28, num_steps=20)]
+
+# dataset = 'fashion'
+# model_names = ['LeNet5', 'ConvAndParaFashion2', 'ConvAndParaFashion1', 'ConvAndParaFashion', 'ConvAndLifFashion1', 'ConvAndLifFashion']
+# n_epochs_list = [30, 30, 30, 30, 30, 30]
+# models = [LeNet5_FASHION(channels=1, para_input=5),\
+#           ConvAndParaFashion2(channels=28*28, device=device, spike_mode=spike_mode, num_steps=100, tau_mem=tau_mem, tau_syn=tau_syn),\
+#           ConvAndParaFashion1(channels=28*28, device=device, spike_mode=spike_mode, num_steps=100, tau_mem=tau_mem, tau_syn=tau_syn),\
+#           ConvAndParaFashion(channels=28*28, device=device, spike_mode=spike_mode, num_steps=100, tau_mem=tau_mem, tau_syn=tau_syn),\
+#           ConvAndLifFashion1(input_size=28*28, device=device, decay_rate=0.9, num_steps=100),\
+#           ConvAndLifFashion(input_size=28*28, device=device, decay_rate=0.9, num_steps=100)]
 
 '''dataset = 'kmnist'
 model_names = ['LeNet5', 'ConvAndParaKmnist2', 'ConvAndParaKmnist1', 'ConvAndParaKmnist', 'ConvAndLifKmnist1', 'ConvAndLifKmnist']
