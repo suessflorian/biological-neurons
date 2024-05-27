@@ -329,7 +329,7 @@ for i, model in enumerate(paraLIF_models + LIF_models):
                         model
                     )
                 else:
-                    model_fot_attack = model
+                    model_for_attack = model
                     with torch.no_grad():
                         pretrained_model.eval()
                         images = pretrained_model(images, extraction_layer).to(device)

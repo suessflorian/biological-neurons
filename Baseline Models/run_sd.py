@@ -30,29 +30,19 @@ spike_mode = 'SB' # ['SB', 'TRB', 'D', 'SD', 'TD', 'TRD', 'T', 'TT', 'ST', 'TRT'
 ##### Options #####
 
 dataset = 'mnist' # [mnist, cifar, fashion, emnist, kmnist, svhn]
-train = True # Set to False if model training is not required (i.e. you only want to evaluate a model)
 plot = True
 
-# model = SimpleSNN(28*28, num_steps=20) # MNIST or FashionMNIST
-# model = LargerSNN(3*32*32, num_steps=20) # CIFAR-10
 model = GeneralSNN(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), num_steps=num_steps)
 # model = LeNet5_CIFAR()
 # model = LeNet5_MNIST()
-# model = LeNet5_Flexible(n_classes=47) # EMNIST
-# model = SimpleParaLif(28*28, device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
-# model = GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 47), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # EMNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 1024, 768, 512, 256, 128, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(28*28, 5000, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # MNIST
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 1024, 512, 256, 128, 64, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
 # model = GeneralParaLIF(layer_sizes=(3*32*32, 6144, 512, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn) # CIFAR
-# model = Frankenstein(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, spike_mode=spike_mode, num_steps=num_steps, tau_mem=tau_mem, tau_syn=tau_syn)
 # model = LeNet5_Representations_Flexible(10)
 # model = LeNet5_Representations_Flexible_CIFAR(10)
 
-
-load_name = None #'MNIST-GeneralParaLIF-5-epochs' # set to None if loading not required
-save_name = 'MNIST-SimpleSNN-5-epochs' # set to None if saving not required
 
 
 
@@ -76,10 +66,6 @@ test_dataset, test_loader = load_data(dataset=dataset, path='data', train=False,
 ##### Model #####
 
 model = model.to(device)
-
-if load_name:
-    model = load_model(model, model_name=load_name, device=device, path='Baseline Models/models/')
-    print('Model loaded successfully.')
 
 optimizer = optimizer(model.parameters(), lr=learning_rate)
 
