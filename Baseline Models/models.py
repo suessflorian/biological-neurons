@@ -114,7 +114,7 @@ class SimpleSNN(nn.Module):
 
             x = self.fc4(x)
             output_spikes.append(x)
-        return torch.stack(output_spikes, dim=0).sum(dim=0).softmax(dim=1)
+        return torch.stack(output_spikes, dim=0).sum(dim=0)
     
 class LargerSNN(nn.Module):
     # Slightly modified Florian's implementation
@@ -208,7 +208,7 @@ class SimpleParaLif(nn.Module):
         x = self.paralif3(x)
         x = self.paralif4(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)            
+        return x          
     
 class SimpleConvPara(nn.Module):
     torch.manual_seed(1123)

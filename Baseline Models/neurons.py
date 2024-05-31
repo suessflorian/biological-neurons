@@ -50,6 +50,10 @@ class Base(torch.nn.Module):
             torch.nn.init.kaiming_uniform_(self.fc_recu.weight, a=0, mode='fan_in', nonlinearity='linear')
             torch.nn.init.zeros_(self.fc_recu.bias)
             if self.debug: torch.nn.init.ones_(self.fc_recu.weight)
+    
+    def reset_parameters(self):
+        torch.nn.init.kaiming_uniform_(self.fc.weight, a=0, mode='fan_in', nonlinearity='linear')
+        torch.nn.init.zeros_(self.fc.bias)
 
 #ParaLIF implementation from https://github.com/NECOTIS/Parallelizable-Leaky-Integrate-and-Fire-Neuron/blob/main/neurons/paralif.py
 class ParaLIF(Base):
