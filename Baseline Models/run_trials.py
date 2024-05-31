@@ -5,6 +5,7 @@ import json
 from scripts import train_model, test_model
 from utils import load_data
 import time
+import copy
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu') # blank
 
@@ -34,9 +35,7 @@ no_of_trials = 5
 dataset = 'mnist'
 model_names = ['SimpleParaLif', 'SimpleSNN']
 n_epochs_list = [5, 5]
-models = [
-    GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, tau_mem=tau_mem, tau_syn=tau_syn, num_steps=20), 
-    SimpleSNN(input_size=28*28, num_steps=20)]
+models = [SimpleSNN(input_size=28*28, num_steps=20), GeneralParaLIF(layer_sizes=(28*28, 2**9, 2**8, 2**7, 10), device=device, tau_mem=tau_mem, tau_syn=tau_syn, num_steps=20)]
 
 # dataset = 'fashion'
 # model_names = ['LeNet5', 'ConvAndParaFashion2', 'ConvAndParaFashion1', 'ConvAndParaFashion', 'ConvAndLifFashion1', 'ConvAndLifFashion']
@@ -84,13 +83,8 @@ print(f'\n---------- Dataset: {dataset} ----------')
 final_dict = {model_name: dict() for model_name in model_names}
 
 for ind, model_name in enumerate(model_names):
-    model = models[ind]
+    og_model = models[ind]
     n_epochs = n_epochs_list[ind]
-
-    ##### Model #####
-    model = model.to(device)
-    optimizer = torch.optim.Adamax
-    optimizer = optimizer(model.parameters(), lr=learning_rate, weight_decay=decay_rate)
 
     ##### Training #####
     save_dict = {i:dict() for i in range(no_of_trials)}
@@ -98,6 +92,13 @@ for ind, model_name in enumerate(model_names):
     save_dict['dataset'] = dataset
 
     for i in range(no_of_trials):
+        model = copy.deepcopy(og_model)
+        model = model.to(device)
+        
+        ##### Model #####
+        optimizer = torch.optim.Adamax
+        optimizer = optimizer(model.parameters(), lr=learning_rate, weight_decay=decay_rate)
+
         if train:
             start_time = time.time()
             print(f'\n---------- Training Model: {model_name}, Trial: {i} ----------\n')

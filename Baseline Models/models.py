@@ -397,7 +397,7 @@ class SimpleParaLif(nn.Module):
         x = self.paralif3(x)
         x = self.paralif4(x)
         x = torch.mean(x,1)
-        return x.softmax(dim=1)            
+        return x          
     
 class SimpleConvPara(nn.Module):
     def __init__(self, input_size, device, spike_mode='SB', recurrent=False,
