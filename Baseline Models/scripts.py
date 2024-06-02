@@ -26,8 +26,7 @@ def train_model(model, loader, optimizer, n_epochs, device, val_loader=None):
             n_correct += correct
             n_total += len(labels)
             
-            if (i + 1) % 20 == 0:
-                printf(f'Epoch: [{epoch+1}/{n_epochs}], Batch: [{i+1}/{len(loader)}], Loss: {loss.item():.4f}, Training Accuracy: {correct/len(labels):.4f}')
+            printf(f'Epoch: [{epoch+1}/{n_epochs}], Batch: [{i+1}/{len(loader)}], Loss: {loss.item():.4f}, Training Accuracy: {correct/len(labels):.4f}')
         
         epoch_loss /= len(loader)    
         
